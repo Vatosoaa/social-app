@@ -46,11 +46,12 @@ async function seed() {
   console.log('Connected to PostgreSQL database');
 
   try {
-    // Drop table if exists to update schema
-    console.log('Dropping existing "users" table to recreate it with the new schema...');
+    // Drop existing tables with cascade
+    console.log('Dropping existing tables...');
+    await client.sql`DROP TABLE IF EXISTS posts CASCADE;`;
     await client.sql`DROP TABLE IF EXISTS users CASCADE;`;
     
-    console.log('Creating "users" table with new schema...');
+    console.log('Creating "users" table...');
     await client.sql`
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
@@ -66,10 +67,23 @@ async function seed() {
     `;
     console.log('Table "users" created.');
 
+    console.log('Creating "posts" table...');
+    await client.sql`
+      CREATE TABLE posts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT,
+        media_url TEXT,
+        media_type VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    console.log('Table "posts" created.');
+
     console.log('Inserting mock users...');
     const hashedPwd = hashPassword('password123');
     
-    // Insert some mock users with predefined avatar images (using UI avatars or nice placeholders)
     await client.sql`
       INSERT INTO users (email, password_hash, name, bio, avatar_url) VALUES
       ('jean.dupont@example.com', ${hashedPwd}, 'Jean Dupont', 'Développeur passionné par Next.js et Tailwind CSS 🚀. Aime partager son savoir !', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jean'),
@@ -77,6 +91,27 @@ async function seed() {
       ('thomas.dubois@example.com', ${hashedPwd}, 'Thomas Dubois', 'Product Manager. Fan de tech, de caféine et de méthodologies agiles. ☕💻', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Thomas');
     `;
     console.log('Mock users inserted successfully.');
+
+    // Fetch user IDs for post creation
+    const { rows: users } = await client.sql`SELECT id, email FROM users;`;
+    const userMap = {};
+    users.forEach(u => {
+      userMap[u.email] = u.id;
+    });
+
+    console.log('Inserting mock posts...');
+    
+    const jeanId = userMap['jean.dupont@example.com'];
+    const marieId = userMap['marie.martin@example.com'];
+    const thomasId = userMap['thomas.dubois@example.com'];
+
+    await client.sql`
+      INSERT INTO posts (user_id, content, media_url, media_type, created_at) VALUES
+      (${jeanId}, 'Hello la communauté ! Je viens de finaliser la configuration de notre base de données PostgreSQL sur Vercel. Tout fonctionne à merveille ⚡.', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop', 'image', NOW() - INTERVAL '2 hours'),
+      (${marieId}, 'Regardez ce superbe paysage pour s inspirer aujourd hui ! La créativité est partout 🎨✨.', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop', 'image', NOW() - INTERVAL '1 hours'),
+      (${thomasId}, 'Une petite vidéo relaxante de nature pour bien commencer la journée et rester concentré sur nos objectifs de productivité ! 🌿☕', 'https://www.w3schools.com/html/mov_bbb.mp4', 'video', NOW() - INTERVAL '30 minutes');
+    `;
+    console.log('Mock posts inserted successfully.');
 
   } catch (error) {
     console.error('Error running query:', error);

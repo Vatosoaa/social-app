@@ -34,9 +34,46 @@ export type FormState =
         password?: string[];
         bio?: string[];
         avatar_url?: string[];
+        content?: string[];
+        media_url?: string[];
+        media_type?: string[];
       };
       message?: string;
       success?: boolean;
       devToken?: string; // Used to display the reset token in local dev UI
     }
   | undefined;
+
+export const PostSchema = z.object({
+  content: z.string().max(1000, { message: 'Le contenu ne peut pas dépasser 1000 caractères.' }).optional().or(z.literal('')),
+  media_url: z.string().optional().or(z.literal('')),
+  media_type: z.enum(['image', 'video', '']).optional(),
+}).refine((data) => (data.content && data.content.trim().length > 0) || (data.media_url && data.media_url.trim().length > 0), {
+  message: 'La publication doit avoir du texte ou un média.',
+  path: ['content'],
+});
+
+export type PostFormState =
+  | {
+      errors?: {
+        content?: string[];
+        media_url?: string[];
+        media_type?: string[];
+      };
+      message?: string;
+      success?: boolean;
+    }
+  | undefined;
+
+export interface Post {
+  id: number;
+  user_id: number;
+  content: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
+  created_at: string;
+  updated_at: string;
+  author_name: string;
+  author_avatar: string | null;
+}
+
