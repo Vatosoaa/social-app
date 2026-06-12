@@ -26,7 +26,7 @@ export default function SignupPage() {
               Inscription
             </CardTitle>
             <CardDescription className="text-zinc-400 text-sm">
-              Rejoignez notre réseau social dès aujourd hui
+              Rejoignez Twinkly dès aujourd'hui
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

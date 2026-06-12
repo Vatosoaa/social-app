@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { getFollowers, getFollowing, toggleFollow } from '@/app/actions/follows';
 import type { FollowUser } from '@/app/actions/follows';
 import { Camera, Image as ImageIcon, Loader2, LogOut, Sparkles, User, Users, Check } from 'lucide-react';
+import { useAlert } from '@/components/providers/alert-provider';
 
 interface ProfileFormProps {
   user: {
@@ -27,6 +28,7 @@ interface ProfileFormProps {
 const PRESET_SEEDS = ['Jean', 'Marie', 'Thomas', 'Alex', 'Eva', 'Leo', 'Max', 'Luna'];
 
 export default function ProfileForm({ user }: ProfileFormProps) {
+  const { showAlert } = useAlert();
   const [state, action, pending] = useActionState(updateProfile, undefined);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [charCount, setCharCount] = useState((user.bio || '').length);
@@ -61,11 +63,11 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   };
 
   // Read upload file as base64
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        alert('L image est trop lourde. Veuillez choisir une image de moins de 2 Mo.');
+        await showAlert('L image est trop lourde. Veuillez choisir une image de moins de 2 Mo.');
         return;
       }
       const reader = new FileReader();
@@ -92,11 +94,18 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       <main className="relative z-10 w-full max-w-2xl space-y-6">
         {/* Header navigation bar */}
         <div className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-md rounded-2xl p-4">
-          <Link href="/">
-            <Button variant="ghost" className="h-9 gap-1.5 text-zinc-400 hover:text-zinc-200 rounded-xl text-xs">
-              ← Retour au fil
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" className="h-9 gap-1.5 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs">
+                ← Retour au fil
+              </Button>
+            </Link>
+            <Link href="/messages">
+              <Button variant="ghost" className="h-9 gap-1.5 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs">
+                Messages
+              </Button>
+            </Link>
+          </div>
           <form action={logout}>
             <Button
               type="submit"
@@ -341,8 +350,8 @@ export default function ProfileForm({ user }: ProfileFormProps) {
                           {item.avatar_url ? (
                             <img src={item.avatar_url} alt={item.name || ''} className="h-full w-full object-cover" />
                           ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[10px] font-bold text-zinc-500">
-                              {item.name?.charAt(0)?.toUpperCase()}
+                            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-400">
+                              <User className="h-4 w-4 text-zinc-550" />
                             </div>
                           )}
                         </div>

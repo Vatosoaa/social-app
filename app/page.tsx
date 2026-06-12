@@ -6,7 +6,7 @@ import CreatePostForm from '@/components/create-post-form';
 import PostsFeed from '@/components/posts-feed';
 import SuggestionsSidebar from '@/components/suggestions-sidebar';
 import { getSuggestions } from '@/app/actions/follows';
-import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark } from 'lucide-react';
+import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark, MessageSquare } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,7 @@ export default async function Home({ searchParams }: PageProps) {
   const currentUser = await getCurrentUser();
   let posts: Post[] = [];
   let suggestions: any[] = [];
+  let unreadMessagesCount = 0;
   let error: string | null = null;
 
   if (currentUser) {
@@ -101,6 +102,21 @@ export default async function Home({ searchParams }: PageProps) {
     } catch (err: any) {
       console.error('Failed to load suggestions:', err);
     }
+
+    try {
+      const unreadRes = await sql`
+        SELECT COUNT(*)::int AS count 
+        FROM messages 
+        WHERE sender_id <> ${currentUser.id} 
+          AND status <> 'seen' 
+          AND conversation_id IN (
+            SELECT id FROM conversations WHERE user1_id = ${currentUser.id} OR user2_id = ${currentUser.id}
+          )
+      `;
+      unreadMessagesCount = unreadRes.rows[0]?.count || 0;
+    } catch (err: any) {
+      console.error('Failed to load unread count:', err);
+    }
   }
 
   return (
@@ -115,7 +131,7 @@ export default async function Home({ searchParams }: PageProps) {
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-violet-400" />
             <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Réseau Social
+              Twinkly
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -166,6 +182,7 @@ export default async function Home({ searchParams }: PageProps) {
                       { name: 'Accueil', href: '/', icon: Sparkles, active: filter !== 'favorites' },
                       { name: 'Mes Favoris', href: '/?filter=favorites', icon: Bookmark, active: filter === 'favorites' },
                       { name: 'Mon Profil', href: '/profile', icon: User, active: false },
+                      { name: 'Messages', href: '/messages', icon: MessageSquare, active: false, badge: unreadMessagesCount },
                     ].map((item) => (
                       <Link key={item.name} href={item.href}>
                         <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all group cursor-pointer ${
@@ -176,7 +193,12 @@ export default async function Home({ searchParams }: PageProps) {
                           <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
                             item.active ? 'text-violet-400' : 'text-zinc-550 group-hover:text-zinc-300'
                           }`} />
-                          {item.name}
+                          <span>{item.name}</span>
+                          {item.badge && item.badge > 0 ? (
+                            <span className="ml-auto bg-violet-650 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                              {item.badge}
+                            </span>
+                          ) : null}
                         </div>
                       </Link>
                     ))}
@@ -260,7 +282,7 @@ export default async function Home({ searchParams }: PageProps) {
       </main>
 
       <footer className="relative z-10 py-6 text-center text-xs text-zinc-600 border-t border-zinc-900/60">
-        <p>&copy; 2026 Réseau Social Inc. Conçu avec amour, Next.js 16 et Tailwind CSS v4.</p>
+        <p>&copy; 2026 Twinkly Inc. Conçu avec amour, Next.js 16 et Tailwind CSS v4.</p>
       </footer>
     </div>
   );
