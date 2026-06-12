@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 // Load .env manually to avoid extra dependencies
 try {
@@ -34,38 +35,48 @@ if (!process.env.POSTGRES_URL) {
 
 const { db } = require('@vercel/postgres');
 
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+
 async function seed() {
   const client = await db.connect();
   console.log('Connected to PostgreSQL database');
 
   try {
-    console.log('Creating "users" table if it does not exist...');
+    // Drop table if exists to update schema
+    console.log('Dropping existing "users" table to recreate it with the new schema...');
+    await client.sql`DROP TABLE IF EXISTS users CASCADE;`;
+    
+    console.log('Creating "users" table with new schema...');
     await client.sql`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        bio TEXT,
+        avatar_url TEXT,
+        reset_token VARCHAR(255),
+        reset_token_expires TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    console.log('Table "users" created or already exists.');
+    console.log('Table "users" created.');
 
-    const { rows } = await client.sql`SELECT COUNT(*) FROM users;`;
-    const count = parseInt(rows[0].count, 10);
+    console.log('Inserting mock users...');
+    const hashedPwd = hashPassword('password123');
     
-    if (count === 0) {
-      console.log('Inserting mock users...');
-      await client.sql`
-        INSERT INTO users (name, email) VALUES
-        ('Jean Dupont', 'jean.dupont@example.com'),
-        ('Marie Martin', 'marie.martin@example.com'),
-        ('Thomas Dubois', 'thomas.dubois@example.com')
-        ON CONFLICT (email) DO NOTHING;
-      `;
-      console.log('Mock users inserted.');
-    } else {
-      console.log(`Table already has ${count} users. Skipping insertion.`);
-    }
+    // Insert some mock users with predefined avatar images (using UI avatars or nice placeholders)
+    await client.sql`
+      INSERT INTO users (email, password_hash, name, bio, avatar_url) VALUES
+      ('jean.dupont@example.com', ${hashedPwd}, 'Jean Dupont', 'Développeur passionné par Next.js et Tailwind CSS 🚀. Aime partager son savoir !', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jean'),
+      ('marie.martin@example.com', ${hashedPwd}, 'Marie Martin', 'Designer UI/UX & Freelance. Créatrice d interfaces élégantes et fluides. ✨🎨', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Marie'),
+      ('thomas.dubois@example.com', ${hashedPwd}, 'Thomas Dubois', 'Product Manager. Fan de tech, de caféine et de méthodologies agiles. ☕💻', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Thomas');
+    `;
+    console.log('Mock users inserted successfully.');
 
   } catch (error) {
     console.error('Error running query:', error);
