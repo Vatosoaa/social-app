@@ -47,9 +47,10 @@ function highlightMatch(text: string, query: string) {
 interface LiveSearchBarProps {
   initialQuery?: string;
   placeholder?: string;
+  variant?: 'default' | 'navbar';
 }
 
-export default function LiveSearchBar({ initialQuery = '', placeholder }: LiveSearchBarProps) {
+export default function LiveSearchBar({ initialQuery = '', placeholder, variant = 'default' }: LiveSearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResults | null>(null);
@@ -168,15 +169,17 @@ export default function LiveSearchBar({ initialQuery = '', placeholder }: LiveSe
 
   let flatIdx = 0;
 
+  const isNavbar = variant === 'navbar';
+
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Search Input */}
       <form onSubmit={handleSubmit} className="relative flex items-center">
-        <div className="absolute left-4 flex items-center pointer-events-none">
+        <div className={`absolute ${isNavbar ? 'left-3.5' : 'left-4'} flex items-center pointer-events-none`}>
           {isLoading ? (
-            <Loader2 className="h-4 w-4 text-violet-400 animate-spin" />
+            <Loader2 className={`h-4 w-4 ${isNavbar ? 'text-teal-400' : 'text-violet-400'} animate-spin`} />
           ) : (
-            <Search className="h-4 w-4 text-zinc-500" />
+            <Search className={`h-4 w-4 ${isNavbar ? 'text-zinc-500' : 'text-zinc-550'}`} />
           )}
         </div>
         <input
@@ -188,15 +191,19 @@ export default function LiveSearchBar({ initialQuery = '', placeholder }: LiveSe
           onKeyDown={handleKeyDown}
           placeholder={placeholder || 'Rechercher sur Twinkly (membres, publications, #tags)...'}
           autoComplete="off"
-          className="w-full pl-11 pr-10 h-12 bg-zinc-950/60 border border-zinc-800/80 rounded-2xl text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 text-sm transition-all duration-200"
+          className={
+            isNavbar
+              ? "w-full pl-9 pr-8 h-9 bg-zinc-900/40 border border-zinc-850 hover:bg-zinc-900/80 rounded-full text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-teal-500/50 text-xs transition-all duration-200"
+              : "w-full pl-11 pr-10 h-12 bg-zinc-950/60 border border-zinc-800/80 rounded-2xl text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 text-sm transition-all duration-200"
+          }
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3.5 h-6 w-6 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all"
+            className={`absolute ${isNavbar ? 'right-2.5 h-5 w-5' : 'right-3.5 h-6 w-6'} flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all`}
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
         )}
       </form>

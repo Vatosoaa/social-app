@@ -32,10 +32,18 @@ export async function toggleFollow(targetUserId: number): Promise<{ success: boo
       await sql`
         DELETE FROM follows WHERE follower_id = ${currentUser.id} AND following_id = ${targetUserId}
       `;
+      await sql`
+        DELETE FROM notifications 
+        WHERE recipient_id = ${targetUserId} AND notifier_id = ${currentUser.id} AND type = 'follow'
+      `;
       following = false;
     } else {
       await sql`
         INSERT INTO follows (follower_id, following_id) VALUES (${currentUser.id}, ${targetUserId})
+      `;
+      await sql`
+        INSERT INTO notifications (recipient_id, notifier_id, type)
+        VALUES (${targetUserId}, ${currentUser.id}, 'follow')
       `;
       following = true;
     }

@@ -10,6 +10,7 @@ import type { FollowUser } from '@/app/actions/follows';
 import type { DbUser } from '@/lib/session';
 import type { Post } from '@/lib/definitions';
 import PostCard from './post-card';
+import Navbar from './navbar';
 
 interface ProfilePublicProps {
   targetUser: {
@@ -81,21 +82,10 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
 
       {/* Header bar */}
-      <header className="sticky top-0 z-30 w-full border-b border-zinc-900/60 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/">
-            <Button variant="ghost" className="h-9 gap-1.5 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs">
-              <ChevronLeft className="h-4 w-4" /> Retour au fil
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-violet-400" />
-            <span className="text-xs font-bold tracking-wider bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Twinkly
-            </span>
-          </div>
-        </div>
-      </header>
+      <Navbar 
+        currentUser={currentUser} 
+        activeTab="none" 
+      />
 
       <main className="relative z-10 flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6">
         {/* Profile Details Card */}

@@ -5,6 +5,8 @@ import { getConversations, getOrCreateConversation } from '@/app/actions/message
 import MessagesClient from '@/components/messages-client';
 import { Button } from '@/components/ui/button';
 import { Sparkles, User, Bookmark, MessageSquare, LogIn, UserPlus, Search } from 'lucide-react';
+import Navbar from '@/components/navbar';
+import { sql } from '@vercel/postgres';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +44,22 @@ export default async function MessagesPage({ searchParams }: PageProps) {
 
   const initialConversations = await getConversations();
 
+  let unreadMessagesCount = 0;
+  try {
+    const unreadRes = await sql`
+      SELECT COUNT(*)::int AS count 
+      FROM messages 
+      WHERE sender_id <> ${currentUser.id} 
+        AND status <> 'seen' 
+        AND conversation_id IN (
+          SELECT id FROM conversations WHERE user1_id = ${currentUser.id} OR user2_id = ${currentUser.id}
+        )
+    `;
+    unreadMessagesCount = unreadRes.rows[0]?.count || 0;
+  } catch (err) {
+    console.error('Failed to load unread count:', err);
+  }
+
   return (
     <div className="relative flex flex-col h-screen bg-zinc-950 font-sans text-zinc-100 overflow-hidden">
       {/* Background glow */}
@@ -49,32 +67,11 @@ export default async function MessagesPage({ searchParams }: PageProps) {
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
 
       {/* Navigation Bar */}
-      <header className="sticky top-0 z-30 w-full border-b border-zinc-900/60 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-violet-400" />
-            <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Twinkly
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/profile">
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/40 hover:bg-zinc-900/70 transition-all cursor-pointer">
-                <div className="h-7 w-7 rounded-full overflow-hidden border border-zinc-700">
-                  {currentUser.avatar_url ? (
-                    <img src={currentUser.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-zinc-950">
-                      <User className="h-4 w-4 text-zinc-500" />
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium text-zinc-300">{currentUser.name}</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar 
+        currentUser={currentUser} 
+        activeTab="messages" 
+        unreadMessagesCount={unreadMessagesCount} 
+      />
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 flex flex-col max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6 pt-4 overflow-hidden">
