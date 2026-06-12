@@ -23,11 +23,24 @@ export async function toggleLike(postId: number): Promise<{ success: boolean; li
       await sql`
         DELETE FROM likes WHERE user_id = ${currentUser.id} AND post_id = ${postId}
       `;
+      await sql`
+        DELETE FROM notifications 
+        WHERE recipient_id = (SELECT user_id FROM posts WHERE id = ${postId}) 
+          AND notifier_id = ${currentUser.id} 
+          AND type = 'reaction' 
+          AND post_id = ${postId}
+      `;
       liked = false;
     } else {
       // Add like
       await sql`
         INSERT INTO likes (user_id, post_id) VALUES (${currentUser.id}, ${postId})
+      `;
+      await sql`
+        INSERT INTO notifications (recipient_id, notifier_id, type, post_id)
+        SELECT user_id, ${currentUser.id}, 'reaction', ${postId}
+        FROM posts
+        WHERE id = ${postId} AND user_id <> ${currentUser.id}
       `;
       liked = true;
     }
@@ -71,17 +84,45 @@ export async function toggleReaction(
       const curr = existing.rows[0].reaction_type;
       if (curr === reactionType) {
         await sql`DELETE FROM likes WHERE user_id = ${currentUser.id} AND post_id = ${postId}`;
+        await sql`
+          DELETE FROM notifications 
+          WHERE recipient_id = (SELECT user_id FROM posts WHERE id = ${postId}) 
+            AND notifier_id = ${currentUser.id} 
+            AND type = 'reaction' 
+            AND post_id = ${postId}
+        `;
         user_reaction = null;
       } else {
         await sql`
           UPDATE likes SET reaction_type = ${reactionType}
           WHERE user_id = ${currentUser.id} AND post_id = ${postId}
         `;
+        // Insert notification if not exists
+        await sql`
+          INSERT INTO notifications (recipient_id, notifier_id, type, post_id)
+          SELECT user_id, ${currentUser.id}, 'reaction', ${postId}
+          FROM posts
+          WHERE id = ${postId} AND user_id <> ${currentUser.id}
+            AND NOT EXISTS (
+              SELECT 1 FROM notifications 
+              WHERE recipient_id = posts.user_id AND notifier_id = ${currentUser.id} AND type = 'reaction' AND post_id = ${postId}
+            )
+        `;
         user_reaction = reactionType;
       }
     } else {
       await sql`
         INSERT INTO likes (user_id, post_id, reaction_type) VALUES (${currentUser.id}, ${postId}, ${reactionType})
+      `;
+      await sql`
+        INSERT INTO notifications (recipient_id, notifier_id, type, post_id)
+        SELECT user_id, ${currentUser.id}, 'reaction', ${postId}
+        FROM posts
+        WHERE id = ${postId} AND user_id <> ${currentUser.id}
+          AND NOT EXISTS (
+            SELECT 1 FROM notifications 
+            WHERE recipient_id = posts.user_id AND notifier_id = ${currentUser.id} AND type = 'reaction' AND post_id = ${postId}
+          )
       `;
       user_reaction = reactionType;
     }
@@ -133,6 +174,14 @@ export async function addComment(
     `;
 
     const newCommentId = insertRes.rows[0].id;
+
+    // Create comment notification (if post author is not the comment author)
+    await sql`
+      INSERT INTO notifications (recipient_id, notifier_id, type, post_id, comment_id)
+      SELECT user_id, ${currentUser.id}, 'comment', ${postId}, ${newCommentId}
+      FROM posts
+      WHERE id = ${postId} AND user_id <> ${currentUser.id}
+    `;
 
     // Fetch the inserted comment with author info
     const commentRes = await sql`

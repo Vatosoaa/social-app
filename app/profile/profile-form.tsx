@@ -12,6 +12,7 @@ import { getFollowers, getFollowing, toggleFollow } from '@/app/actions/follows'
 import type { FollowUser } from '@/app/actions/follows';
 import { Camera, Image as ImageIcon, Loader2, LogOut, Sparkles, User, Users, Check } from 'lucide-react';
 import { useAlert } from '@/components/providers/alert-provider';
+import Navbar from '@/components/navbar';
 
 interface ProfileFormProps {
   user: {
@@ -86,36 +87,15 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-zinc-950 font-sans text-zinc-100 overflow-hidden py-12 px-4">
+    <div className="relative flex flex-col min-h-screen bg-zinc-950 font-sans text-zinc-100 overflow-x-hidden">
       {/* Glow effects */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none animate-pulse duration-3000" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none animate-pulse duration-3000" />
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
 
-      <main className="relative z-10 w-full max-w-2xl space-y-6">
-        {/* Header navigation bar */}
-        <div className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-md rounded-2xl p-4">
-          <div className="flex items-center gap-2">
-            <Link href="/">
-              <Button variant="ghost" className="h-9 gap-1.5 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs">
-                ← Retour au fil
-              </Button>
-            </Link>
-            <Link href="/messages">
-              <Button variant="ghost" className="h-9 gap-1.5 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs">
-                Messages
-              </Button>
-            </Link>
-          </div>
-          <form action={logout}>
-            <Button
-              type="submit"
-              variant="ghost"
-              className="text-xs text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 rounded-xl transition-all"
-            >
-              <LogOut className="h-4 w-4 mr-2" /> Déconnexion
-            </Button>
-          </form>
-        </div>
+      {/* Navigation bar */}
+      <Navbar currentUser={user} activeTab="profile" />
+
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-12 px-4 w-full max-w-2xl mx-auto space-y-6">
 
         {/* Profile Details Card */}
         <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl shadow-2xl rounded-3xl transition-all duration-300 hover:border-zinc-700/80">

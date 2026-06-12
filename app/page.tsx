@@ -9,6 +9,7 @@ import { getSuggestions } from '@/app/actions/follows';
 import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark, MessageSquare, Search } from 'lucide-react';
 import LiveSearchBar from '@/components/live-search-bar';
 import type { Post } from '@/lib/definitions';
+import Navbar from '@/components/navbar';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,39 @@ export default async function Home({ searchParams }: PageProps) {
           FROM posts p
           JOIN users u ON p.user_id = u.id
           JOIN favorites f ON p.id = f.post_id AND f.user_id = ${currentUser.id}
+          ORDER BY p.created_at DESC
+          LIMIT 50
+        `;
+        const empty = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+        posts = rows.map((row) => ({ ...row, reactions_by_type: row.reactions_by_type || empty })) as Post[];
+      } else if (filter === 'media') {
+        const { rows } = await sql`
+          SELECT
+            p.id,
+            p.user_id,
+            p.content,
+            p.media_url,
+            p.media_type,
+            p.created_at,
+            p.updated_at,
+            u.name AS author_name,
+            u.avatar_url AS author_avatar,
+            (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
+            (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
+            EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_liked,
+            EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_favorited,
+            (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id} LIMIT 1) AS user_reaction,
+            (SELECT json_build_object(
+              'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
+              'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
+              'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
+              'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
+              'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
+              'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
+            ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+          FROM posts p
+          JOIN users u ON p.user_id = u.id
+          WHERE p.media_url IS NOT NULL AND p.media_url <> ''
           ORDER BY p.created_at DESC
           LIMIT 50
         `;
@@ -127,52 +161,11 @@ export default async function Home({ searchParams }: PageProps) {
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
 
       {/* Navigation bar */}
-      <header className="sticky top-0 z-30 w-full border-b border-zinc-900/60 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex items-center gap-4 px-6 py-3">
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Sparkles className="h-5 w-5 text-violet-400" />
-            <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Twinkly
-            </span>
-          </div>
-          {currentUser && (
-            <div className="flex-1 max-w-md hidden sm:block relative z-[9999]">
-              <LiveSearchBar placeholder="Rechercher..." />
-            </div>
-          )}
-          <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-            {currentUser ? (
-              <Link href="/profile">
-                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/40 hover:bg-zinc-900/70 transition-all cursor-pointer">
-                  <div className="h-7 w-7 rounded-full overflow-hidden border border-zinc-700">
-                    {currentUser.avatar_url ? (
-                      <img src={currentUser.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-zinc-950">
-                        <User className="h-4 w-4 text-zinc-500" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-sm font-medium text-zinc-300">{currentUser.name}</span>
-                </div>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" className="h-9 text-zinc-400 hover:text-zinc-200 rounded-xl text-sm">
-                    <LogIn className="h-4 w-4 mr-1.5" /> Connexion
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button className="h-9 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl text-sm font-semibold shadow-md shadow-violet-500/10">
-                    <UserPlus className="h-4 w-4 mr-1.5" /> Rejoindre
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar 
+        currentUser={currentUser} 
+        activeTab={filter === 'favorites' ? 'favorites' : filter === 'media' ? 'media' : 'home'} 
+        unreadMessagesCount={unreadMessagesCount} 
+      />
 
       <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* ─── AUTHENTICATED LAYOUT ─── */}
