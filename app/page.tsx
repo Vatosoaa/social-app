@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import CreatePostForm from '@/components/create-post-form';
 import PostsFeed from '@/components/posts-feed';
+import SuggestionsSidebar from '@/components/suggestions-sidebar';
+import { getSuggestions } from '@/app/actions/follows';
 import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 
@@ -18,7 +20,7 @@ export default async function Home({ searchParams }: PageProps) {
   const filter = resolvedSearchParams.filter as string;
   const currentUser = await getCurrentUser();
   let posts: Post[] = [];
-  let members: any[] = [];
+  let suggestions: any[] = [];
   let error: string | null = null;
 
   if (currentUser) {
@@ -95,12 +97,9 @@ export default async function Home({ searchParams }: PageProps) {
     }
 
     try {
-      const { rows } = await sql`
-        SELECT id, name, bio, avatar_url FROM users ORDER BY created_at DESC LIMIT 8
-      `;
-      members = rows;
+      suggestions = await getSuggestions();
     } catch (err: any) {
-      console.error('Failed to load members:', err);
+      console.error('Failed to load suggestions:', err);
     }
   }
 
@@ -218,43 +217,9 @@ export default async function Home({ searchParams }: PageProps) {
               <PostsFeed initialPosts={posts} currentUser={currentUser} isFavoritesFilter={filter === 'favorites'} />
             </div>
 
-            {/* Sidebar — Members */}
+            {/* Sidebar — Suggestions */}
             <aside className="hidden lg:block">
-              <div className="sticky top-24 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  <Users className="h-3.5 w-3.5" />
-                  Membres ({members.length})
-                </div>
-                <ul className="space-y-3">
-                  {members.map((member) => (
-                    <li key={member.id} className="flex items-center gap-3 group">
-                      <div className="relative flex-shrink-0">
-                        <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 group-hover:border-violet-500/30 transition-all duration-300">
-                          {member.avatar_url ? (
-                            <img src={member.avatar_url} alt={member.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-zinc-900">
-                              <User className="h-4 w-4 text-zinc-600" />
-                            </div>
-                          )}
-                        </div>
-                        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-zinc-900 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-zinc-300 truncate group-hover:text-zinc-100 transition-colors">
-                          {member.name || 'Utilisateur'}
-                        </p>
-                        <p className="text-xs text-zinc-500 truncate">{member.bio || 'Pas de biographie.'}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/profile">
-                  <Button className="w-full mt-2 h-9 text-xs bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 rounded-xl border border-zinc-700/60 hover:border-zinc-600 transition-all">
-                    Gérer mon profil
-                  </Button>
-                </Link>
-              </div>
+              <SuggestionsSidebar initialSuggestions={suggestions} currentUserId={currentUser.id} />
             </aside>
           </div>
         ) : (
