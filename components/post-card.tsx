@@ -26,6 +26,27 @@ import type { DbUser } from '@/lib/session';
 import { toggleReaction, addComment, deleteComment, toggleFavorite, getComments } from '@/app/actions/interactions';
 import { useAlert } from '@/components/providers/alert-provider';
 
+function renderContentWithHashtags(content: string | null) {
+  if (!content) return null;
+  const parts = content.split(/(\s+)/);
+  return parts.map((part, index) => {
+    if (part.startsWith('#') && part.length > 1) {
+      const cleanHashtag = part.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+      return (
+        <Link
+          key={index}
+          href={`/search?q=${encodeURIComponent(cleanHashtag)}`}
+          className="text-violet-400 hover:text-violet-300 transition-colors hover:underline font-semibold"
+        >
+          {part}
+        </Link>
+      );
+    }
+    return part;
+  });
+}
+
+
 interface PostCardProps {
   post: Post;
   currentUser: DbUser | null;
@@ -339,7 +360,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
         {/* Text content */}
         {post.content && (
           <div className="px-5 pb-3">
-            <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{renderContentWithHashtags(post.content)}</p>
           </div>
         )}
 
@@ -539,7 +560,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                                   </Link>
                                   <span className="text-[10px] text-zinc-550">{formatRelativeTime(comment.created_at)}</span>
                                 </div>
-                                <p className="text-zinc-300 leading-relaxed">{comment.content}</p>
+                                <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">{renderContentWithHashtags(comment.content)}</p>
                               </div>
                               {/* Reply & Delete actions */}
                               <div className="flex items-center gap-3 pl-2">
@@ -612,7 +633,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                                     </Link>
                                     <span className="text-[10px] text-zinc-550">{formatRelativeTime(reply.created_at)}</span>
                                   </div>
-                                  <p className="text-zinc-350 leading-relaxed">{reply.content}</p>
+                                  <p className="text-zinc-355 leading-relaxed whitespace-pre-wrap">{renderContentWithHashtags(reply.content)}</p>
                                 </div>
                                 {currentUser?.id === reply.user_id && (
                                   <div className="pl-2">

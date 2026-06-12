@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/session';
 import { getConversations, getOrCreateConversation } from '@/app/actions/messages';
 import MessagesClient from '@/components/messages-client';
 import { Button } from '@/components/ui/button';
-import { Sparkles, User, Bookmark, MessageSquare, LogIn, UserPlus } from 'lucide-react';
+import { Sparkles, User, Bookmark, MessageSquare, LogIn, UserPlus, Search } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +87,7 @@ export default async function MessagesPage({ searchParams }: PageProps) {
                 <nav className="space-y-1">
                   {[
                     { name: 'Accueil', href: '/', icon: Sparkles, active: false },
+                    { name: 'Recherche', href: '/search', icon: Search, active: false },
                     { name: 'Mes Favoris', href: '/?filter=favorites', icon: Bookmark, active: false },
                     { name: 'Mon Profil', href: '/profile', icon: User, active: false },
                     { name: 'Messages', href: '/messages', icon: MessageSquare, active: true },

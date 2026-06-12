@@ -6,7 +6,8 @@ import CreatePostForm from '@/components/create-post-form';
 import PostsFeed from '@/components/posts-feed';
 import SuggestionsSidebar from '@/components/suggestions-sidebar';
 import { getSuggestions } from '@/app/actions/follows';
-import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark, MessageSquare } from 'lucide-react';
+import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark, MessageSquare, Search } from 'lucide-react';
+import LiveSearchBar from '@/components/live-search-bar';
 import type { Post } from '@/lib/definitions';
 
 export const dynamic = 'force-dynamic';
@@ -127,14 +128,19 @@ export default async function Home({ searchParams }: PageProps) {
 
       {/* Navigation bar */}
       <header className="sticky top-0 z-30 w-full border-b border-zinc-900/60 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
+        <div className="max-w-6xl mx-auto flex items-center gap-4 px-6 py-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Sparkles className="h-5 w-5 text-violet-400" />
             <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent uppercase">
               Twinkly
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          {currentUser && (
+            <div className="flex-1 max-w-md hidden sm:block relative z-[9999]">
+              <LiveSearchBar placeholder="Rechercher..." />
+            </div>
+          )}
+          <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
             {currentUser ? (
               <Link href="/profile">
                 <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/40 hover:bg-zinc-900/70 transition-all cursor-pointer">
@@ -180,6 +186,7 @@ export default async function Home({ searchParams }: PageProps) {
                   <nav className="space-y-1">
                     {[
                       { name: 'Accueil', href: '/', icon: Sparkles, active: filter !== 'favorites' },
+                      { name: 'Recherche', href: '/search', icon: Search, active: false },
                       { name: 'Mes Favoris', href: '/?filter=favorites', icon: Bookmark, active: filter === 'favorites' },
                       { name: 'Mon Profil', href: '/profile', icon: User, active: false },
                       { name: 'Messages', href: '/messages', icon: MessageSquare, active: false, badge: unreadMessagesCount },
