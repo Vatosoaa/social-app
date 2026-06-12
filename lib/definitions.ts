@@ -75,5 +75,29 @@ export interface Post {
   updated_at: string;
   author_name: string;
   author_avatar: string | null;
+  likes_count: number;
+  comments_count: number;
+  user_has_liked: boolean;
+  user_has_favorited: boolean;
+  user_reaction: string | null;
+  reactions_by_type: {
+    like: number;
+    love: number;
+    haha: number;
+    wow: number;
+    sad: number;
+    angry: number;
+  };
+}
+
+export interface DbComment {
+  id: number;
+  user_id: number;
+  post_id: number;
+  content: string;
+  parent_comment_id: number | null;
+  created_at: string;
+  author_name: string;
+  author_avatar: string | null;
 }
 

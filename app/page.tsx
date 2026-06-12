@@ -4,12 +4,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import CreatePostForm from '@/components/create-post-form';
 import PostsFeed from '@/components/posts-feed';
-import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users } from 'lucide-react';
+import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users, Bookmark } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  const filter = resolvedSearchParams.filter as string;
   const currentUser = await getCurrentUser();
   let posts: Post[] = [];
   let members: any[] = [];
@@ -17,23 +23,72 @@ export default async function Home() {
 
   if (currentUser) {
     try {
-      const { rows } = await sql`
-        SELECT
-          p.id,
-          p.user_id,
-          p.content,
-          p.media_url,
-          p.media_type,
-          p.created_at,
-          p.updated_at,
-          u.name  AS author_name,
-          u.avatar_url AS author_avatar
-        FROM posts p
-        JOIN users u ON p.user_id = u.id
-        ORDER BY p.created_at DESC
-        LIMIT 50
-      `;
-      posts = rows as Post[];
+      if (filter === 'favorites') {
+        const { rows } = await sql`
+          SELECT
+            p.id,
+            p.user_id,
+            p.content,
+            p.media_url,
+            p.media_type,
+            p.created_at,
+            p.updated_at,
+            u.name AS author_name,
+            u.avatar_url AS author_avatar,
+            (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
+            (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
+            EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_liked,
+            EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_favorited,
+            (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id} LIMIT 1) AS user_reaction,
+            (SELECT json_build_object(
+              'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
+              'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
+              'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
+              'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
+              'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
+              'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
+            ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+          FROM posts p
+          JOIN users u ON p.user_id = u.id
+          JOIN favorites f ON p.id = f.post_id AND f.user_id = ${currentUser.id}
+          ORDER BY p.created_at DESC
+          LIMIT 50
+        `;
+        const empty = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+        posts = rows.map((row) => ({ ...row, reactions_by_type: row.reactions_by_type || empty })) as Post[];
+      } else {
+        const { rows } = await sql`
+          SELECT
+            p.id,
+            p.user_id,
+            p.content,
+            p.media_url,
+            p.media_type,
+            p.created_at,
+            p.updated_at,
+            u.name AS author_name,
+            u.avatar_url AS author_avatar,
+            (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
+            (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
+            EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_liked,
+            EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_favorited,
+            (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id} LIMIT 1) AS user_reaction,
+            (SELECT json_build_object(
+              'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
+              'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
+              'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
+              'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
+              'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
+              'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
+            ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+          FROM posts p
+          JOIN users u ON p.user_id = u.id
+          ORDER BY p.created_at DESC
+          LIMIT 50
+        `;
+        const empty = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+        posts = rows.map((row) => ({ ...row, reactions_by_type: row.reactions_by_type || empty })) as Post[];
+      }
     } catch (err: any) {
       console.error('Failed to load posts:', err);
       error = err.message;
@@ -101,7 +156,57 @@ export default async function Home() {
       <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* ─── AUTHENTICATED LAYOUT ─── */}
         {currentUser ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr_300px] gap-6">
+            {/* Left Sidebar Navigation */}
+            <aside className="hidden md:block">
+              <div className="sticky top-24 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider pl-3">Navigation</p>
+                  <nav className="space-y-1">
+                    {[
+                      { name: 'Accueil', href: '/', icon: Sparkles, active: filter !== 'favorites' },
+                      { name: 'Mes Favoris', href: '/?filter=favorites', icon: Bookmark, active: filter === 'favorites' },
+                      { name: 'Mon Profil', href: '/profile', icon: User, active: false },
+                    ].map((item) => (
+                      <Link key={item.name} href={item.href}>
+                        <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all group cursor-pointer ${
+                          item.active
+                            ? 'bg-violet-600/10 border border-violet-500/20 text-violet-400 font-semibold shadow-[0_0_15px_rgba(139,92,246,0.05)]'
+                            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
+                        }`}>
+                          <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
+                            item.active ? 'text-violet-400' : 'text-zinc-550 group-hover:text-zinc-300'
+                          }`} />
+                          {item.name}
+                        </div>
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+
+                <div className="border-t border-zinc-800/60 pt-4">
+                  <div className="px-3">
+                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Utilisateur connecté</p>
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0">
+                        {currentUser.avatar_url ? (
+                          <img src={currentUser.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-zinc-900">
+                            <User className="h-3.5 w-3.5 text-zinc-655" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-zinc-200 truncate leading-tight">{currentUser.name}</p>
+                        <p className="text-[10px] text-zinc-550 truncate mt-0.5">{currentUser.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
             {/* Feed column */}
             <div className="space-y-5 min-w-0">
               {/* Error banner */}
@@ -110,7 +215,7 @@ export default async function Home() {
                   {error}
                 </div>
               )}
-              <PostsFeed initialPosts={posts} currentUser={currentUser} />
+              <PostsFeed initialPosts={posts} currentUser={currentUser} isFavoritesFilter={filter === 'favorites'} />
             </div>
 
             {/* Sidebar — Members */}
@@ -123,14 +228,17 @@ export default async function Home() {
                 <ul className="space-y-3">
                   {members.map((member) => (
                     <li key={member.id} className="flex items-center gap-3 group">
-                      <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0">
-                        {member.avatar_url ? (
-                          <img src={member.avatar_url} alt={member.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center">
-                            <User className="h-4 w-4 text-zinc-600" />
-                          </div>
-                        )}
+                      <div className="relative flex-shrink-0">
+                        <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 group-hover:border-violet-500/30 transition-all duration-300">
+                          {member.avatar_url ? (
+                            <img src={member.avatar_url} alt={member.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-zinc-900">
+                              <User className="h-4 w-4 text-zinc-600" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-zinc-900 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-zinc-300 truncate group-hover:text-zinc-100 transition-colors">
@@ -138,12 +246,11 @@ export default async function Home() {
                         </p>
                         <p className="text-xs text-zinc-500 truncate">{member.bio || 'Pas de biographie.'}</p>
                       </div>
-                      <span className="ml-auto h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)] flex-shrink-0" />
                     </li>
                   ))}
                 </ul>
                 <Link href="/profile">
-                  <Button className="w-full mt-2 h-9 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl border border-zinc-700 transition-all">
+                  <Button className="w-full mt-2 h-9 text-xs bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 rounded-xl border border-zinc-700/60 hover:border-zinc-600 transition-all">
                     Gérer mon profil
                   </Button>
                 </Link>

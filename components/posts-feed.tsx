@@ -4,7 +4,7 @@ import { useOptimistic, useRef, useState, useTransition } from 'react';
 import { createPost } from '@/app/actions/posts';
 import PostCard from '@/components/post-card';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Loader2, SendHorizonal, Sparkles, Video, X } from 'lucide-react';
+import { Image as ImageIcon, Loader2, SendHorizonal, Sparkles, Video, X, Bookmark } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 import type { DbUser } from '@/lib/session';
 
@@ -25,9 +25,10 @@ const PRESET_VIDEOS = [
 interface PostsFeedProps {
   initialPosts: Post[];
   currentUser: DbUser;
+  isFavoritesFilter?: boolean;
 }
 
-export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps) {
+export default function PostsFeed({ initialPosts, currentUser, isFavoritesFilter }: PostsFeedProps) {
   // Optimistic list — updates immediately before server confirms
   const [optimisticPosts, addOptimisticPost] = useOptimistic(
     initialPosts,
@@ -36,6 +37,7 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
 
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   // Form state
   const formRef = useRef<HTMLFormElement>(null);
@@ -87,6 +89,12 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
       updated_at: new Date().toISOString(),
       author_name: currentUser.name || 'Vous',
       author_avatar: currentUser.avatar_url || null,
+      likes_count: 0,
+      comments_count: 0,
+      user_has_liked: false,
+      user_has_favorited: false,
+      user_reaction: null,
+      reactions_by_type: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
     };
 
     // Reset form immediately for snappy UX
@@ -107,8 +115,39 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
 
   return (
     <div className="space-y-5">
+      {/* Title / Info bar */}
+      <div className="flex items-center justify-between pb-1">
+        <div className="space-y-0.5">
+          <h2 className="text-xl font-bold tracking-tight text-zinc-100">
+            {isFavoritesFilter ? 'Publications favorites' : 'Fil d\'actualité'}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {isFavoritesFilter ? 'Retrouvez ici toutes vos publications mises en favoris' : 'Découvrez et interagissez avec les dernières publications'}
+          </p>
+        </div>
+        {isFavoritesFilter ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold">
+            <Bookmark className="h-3.5 w-3.5" />
+            Favoris
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            En direct
+          </div>
+        )}
+      </div>
+
       {/* ─── Create post form ─── */}
-      <div className="rounded-3xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl p-5 space-y-4">
+      {!isFavoritesFilter && (
+        <div className={`rounded-3xl bg-zinc-900/60 border backdrop-blur-xl p-5 space-y-4 transition-all duration-300 ${
+          isFocused
+            ? 'border-violet-500/40 shadow-lg shadow-violet-500/5 bg-zinc-900/70'
+            : 'border-zinc-800/80'
+        }`}>
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0">
             {currentUser.avatar_url ? (
@@ -132,9 +171,13 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
               name="content"
               rows={3}
               maxLength={1000}
-              onChange={(e) => setCharCount(e.target.value.length)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onChange={(e) => {
+                setCharCount(e.target.value.length);
+              }}
               placeholder="Quoi de neuf ? Partagez quelque chose avec la communauté..."
-              className="w-full bg-zinc-950/40 border border-zinc-800/60 rounded-2xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 resize-none focus:outline-none focus:border-violet-500/60 transition-colors"
+              className="w-full bg-zinc-950/40 border border-zinc-800/60 rounded-2xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 resize-none focus:outline-none focus:border-violet-500/50 transition-colors"
             />
             <span className={`absolute bottom-3 right-3 text-xs ${charCount > 900 ? 'text-rose-400' : 'text-zinc-600'}`}>
               {charCount}/1000
@@ -241,13 +284,18 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
             </Button>
           </div>
         </form>
-      </div>
+        </div>
+      )}
 
       {/* ─── Posts list ─── */}
       {optimisticPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-3xl border border-dashed border-zinc-800/60 text-zinc-500 gap-3">
-          <Sparkles className="h-8 w-8" />
-          <p className="text-sm">Aucune publication pour l instant. Soyez le premier à partager !</p>
+          {isFavoritesFilter ? <Bookmark className="h-8 w-8 text-zinc-650" /> : <Sparkles className="h-8 w-8" />}
+          <p className="text-sm">
+            {isFavoritesFilter 
+              ? 'Vous n\'avez pas encore enregistré de publication en favoris.' 
+              : 'Aucune publication pour l\'instant. Soyez le premier à partager !'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -255,7 +303,7 @@ export default function PostsFeed({ initialPosts, currentUser }: PostsFeedProps)
             <PostCard
               key={post.id}
               post={post}
-              currentUserId={currentUser.id}
+              currentUser={currentUser}
             />
           ))}
         </div>
