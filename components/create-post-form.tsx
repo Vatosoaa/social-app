@@ -4,8 +4,9 @@ import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPost } from '@/app/actions/posts';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Loader2, SendHorizonal, Video, X } from 'lucide-react';
+import { Image as ImageIcon, Loader2, SendHorizonal, Video, X, User } from 'lucide-react';
 import type { DbUser } from '@/lib/session';
+import { useAlert } from '@/components/providers/alert-provider';
 
 const PRESET_IMAGES = [
   { label: 'Nature', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1000&auto=format&fit=crop' },
@@ -26,6 +27,7 @@ interface CreatePostFormProps {
 }
 
 export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
+  const { showAlert } = useAlert();
   const [state, action, pending] = useActionState(createPost, undefined);
   const [mediaUrl, setMediaUrl] = useState('');
   const [mediaType, setMediaType] = useState<'image' | 'video' | ''>('');
@@ -33,11 +35,11 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
   const [charCount, setCharCount] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert('Le fichier est trop volumineux. Maximum 5 Mo.');
+      await showAlert('Le fichier est trop volumineux. Maximum 5 Mo.');
       return;
     }
     const reader = new FileReader();
@@ -75,8 +77,8 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
           {currentUser.avatar_url ? (
             <img src={currentUser.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-zinc-500 text-xs font-bold">
-              {currentUser.name?.charAt(0)?.toUpperCase() || 'U'}
+            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-450">
+              <User className="h-5 w-5" />
             </div>
           )}
         </div>

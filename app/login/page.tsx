@@ -36,7 +36,7 @@ function LoginContent() {
               Connexion
             </CardTitle>
             <CardDescription className="text-zinc-400 text-sm">
-              Accédez à votre espace membre sur le Réseau Social
+              Accédez à votre espace membre sur Twinkly
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

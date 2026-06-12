@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { User, Users, ChevronLeft, Calendar, BookOpen, Loader2, Sparkles, Check } from 'lucide-react';
+import { User, Users, ChevronLeft, Calendar, BookOpen, Loader2, Sparkles, Check, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toggleFollow, getFollowers, getFollowing } from '@/app/actions/follows';
@@ -91,7 +91,7 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-violet-400" />
             <span className="text-xs font-bold tracking-wider bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Réseau Social
+              Twinkly
             </span>
           </div>
         </div>
@@ -150,25 +150,36 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
               </div>
             </div>
 
-            {/* Follow Button */}
+            {/* Buttons Row */}
             {currentUser.id !== targetUser.id && (
-              <Button
-                onClick={handleFollowToggle}
-                disabled={isPending}
-                className={`w-full md:w-auto h-10 px-6 font-bold rounded-xl shadow-md transition-all duration-300 ${
-                  isFollowing
-                    ? 'bg-zinc-800 hover:bg-rose-950/20 text-zinc-200 hover:text-rose-450 border border-zinc-700/60 hover:border-rose-900/40'
-                    : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-violet-500/10'
-                }`}
-              >
-                {isFollowing ? (
-                  <span className="flex items-center gap-1.5">
-                    <Check className="h-4 w-4 text-emerald-450" /> Abonné(e)
-                  </span>
-                ) : (
-                  'S\'abonner'
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                <Button
+                  onClick={handleFollowToggle}
+                  disabled={isPending}
+                  className={`w-full sm:w-auto h-10 px-6 font-bold rounded-xl shadow-md transition-all duration-300 ${
+                    isFollowing
+                      ? 'bg-zinc-800 hover:bg-rose-950/20 text-zinc-200 hover:text-rose-450 border border-zinc-700/60 hover:border-rose-900/40'
+                      : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-violet-500/10'
+                  }`}
+                >
+                  {isFollowing ? (
+                    <span className="flex items-center gap-1.5">
+                      <Check className="h-4 w-4 text-emerald-450" /> Abonné(e)
+                    </span>
+                  ) : (
+                    'S\'abonner'
+                  )}
+                </Button>
+
+                <Link href={`/messages?chatUser=${targetUser.id}`} className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto h-10 px-6 font-bold rounded-xl bg-zinc-900/40 border border-zinc-800 text-zinc-300 hover:bg-zinc-850 hover:text-white transition-all duration-300"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" /> Message
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -228,8 +239,8 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
                           {user.avatar_url ? (
                             <img src={user.avatar_url} alt={user.name || ''} className="h-full w-full object-cover" />
                           ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[10px] font-bold text-zinc-500">
-                              {user.name?.charAt(0)?.toUpperCase()}
+                            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-400">
+                              <User className="h-4 w-4 text-zinc-550" />
                             </div>
                           )}
                         </div>

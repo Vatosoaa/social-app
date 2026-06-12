@@ -24,6 +24,7 @@ import {
 import type { Post, DbComment } from '@/lib/definitions';
 import type { DbUser } from '@/lib/session';
 import { toggleReaction, addComment, deleteComment, toggleFavorite, getComments } from '@/app/actions/interactions';
+import { useAlert } from '@/components/providers/alert-provider';
 
 interface PostCardProps {
   post: Post;
@@ -65,6 +66,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export default function PostCard({ post, currentUser }: PostCardProps) {
+  const { showAlert, showConfirm } = useAlert();
   const isOwner = currentUser?.id === post.user_id;
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -119,7 +121,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
 
   const handleReaction = async (type: string) => {
     if (!currentUser) {
-      alert('Vous devez être connecté pour réagir.');
+      await showAlert('Vous devez être connecté pour réagir.');
       return;
     }
     setShowReactionPicker(false);
@@ -147,7 +149,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
     if (!res.success) {
       setUserReaction(prevReaction);
       setReactions(prevReactions);
-      alert(res.message || 'Une erreur est survenue.');
+      await showAlert(res.message || 'Une erreur est survenue.');
     } else if (res.reactions) {
       setReactions(res.reactions);
       setUserReaction(res.user_reaction !== undefined ? res.user_reaction : newReaction);
@@ -178,7 +180,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
 
   const handleFavorite = async () => {
     if (!currentUser) {
-      alert('Vous devez être connecté pour enregistrer en favoris.');
+      await showAlert('Vous devez être connecté pour enregistrer en favoris.');
       return;
     }
     const nextFav = !favorited;
@@ -187,7 +189,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
     const res = await toggleFavorite(post.id);
     if (!res.success) {
       setFavorited(!nextFav);
-      alert(res.message || 'Une erreur est survenue.');
+      await showAlert(res.message || 'Une erreur est survenue.');
     }
   };
 
@@ -217,7 +219,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
     if (res.success && res.comment) {
       setComments((prev) => [...prev, res.comment!]);
     } else {
-      alert(res.message || 'Impossible d enregistrer le commentaire.');
+      await showAlert(res.message || 'Impossible d enregistrer le commentaire.');
     }
   };
 
@@ -232,17 +234,18 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
     if (res.success && res.comment) {
       setComments((prev) => [...prev, res.comment!]);
     } else {
-      alert(res.message || 'Impossible d enregistrer la réponse.');
+      await showAlert(res.message || 'Impossible d enregistrer la réponse.');
     }
   };
 
   const handleDeleteComment = async (commentId: number) => {
-    if (!confirm('Supprimer ce commentaire ?')) return;
+    const confirmed = await showConfirm('Supprimer ce commentaire ?');
+    if (!confirmed) return;
     const res = await deleteComment(commentId);
     if (res.success) {
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } else {
-      alert(res.message || 'Une erreur est survenue.');
+      await showAlert(res.message || 'Une erreur est survenue.');
     }
   };
 
@@ -475,8 +478,8 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                       {currentUser.avatar_url ? (
                         <img src={currentUser.avatar_url} alt={currentUser.name || 'User'} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-violet-900/40 to-fuchsia-900/40 text-[10px] font-bold text-zinc-300">
-                          {currentUser.name?.charAt(0)?.toUpperCase() || 'U'}
+                        <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-450">
+                          <User className="h-4 w-4" />
                         </div>
                       )}
                     </div>
@@ -522,8 +525,8 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                                 {comment.author_avatar ? (
                                   <img src={comment.author_avatar} alt={comment.author_name} className="h-full w-full object-cover" />
                                 ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[9px] font-bold text-zinc-500">
-                                    {comment.author_name?.charAt(0)?.toUpperCase() || 'U'}
+                                  <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-450">
+                                    <User className="h-4 w-4" />
                                   </div>
                                 )}
                               </div>
@@ -595,8 +598,8 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                                   {reply.author_avatar ? (
                                     <img src={reply.author_avatar} alt={reply.author_name} className="h-full w-full object-cover" />
                                   ) : (
-                                    <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[8px] font-bold text-zinc-500">
-                                      {reply.author_name?.charAt(0)?.toUpperCase() || 'U'}
+                                    <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-450">
+                                      <User className="h-3.5 w-3.5" />
                                     </div>
                                   )}
                                 </div>
