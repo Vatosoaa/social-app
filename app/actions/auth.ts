@@ -56,7 +56,7 @@ export async function signup(state: FormState, formData: FormData): Promise<Form
 
   if (userId) {
     await createSession(userId);
-    redirect('/profile');
+    redirect('/');
   }
 
   return { message: 'Une erreur est survenue.' };
@@ -107,7 +107,7 @@ export async function login(state: FormState, formData: FormData): Promise<FormS
 
   if (userId) {
     await createSession(userId);
-    redirect('/profile');
+    redirect('/');
   }
 
   return { message: 'Une erreur est survenue.' };
