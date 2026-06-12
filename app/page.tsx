@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/session';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import CreatePostForm from '@/components/create-post-form';
-import PostCard from '@/components/post-card';
+import PostsFeed from '@/components/posts-feed';
 import { ArrowRight, LogIn, Sparkles, User, UserPlus, Users } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 
@@ -104,33 +104,13 @@ export default async function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
             {/* Feed column */}
             <div className="space-y-5 min-w-0">
-              {/* Create post */}
-              <CreatePostForm currentUser={currentUser} />
-
               {/* Error banner */}
               {error && (
                 <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-900/30 text-rose-300 text-sm">
                   {error}
                 </div>
               )}
-
-              {/* Posts feed */}
-              {posts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 rounded-3xl border border-dashed border-zinc-800/60 text-zinc-500 gap-3">
-                  <Sparkles className="h-8 w-8" />
-                  <p className="text-sm">Aucune publication pour l instant. Soyez le premier à partager !</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {posts.map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      currentUserId={currentUser.id}
-                    />
-                  ))}
-                </div>
-              )}
+              <PostsFeed initialPosts={posts} currentUser={currentUser} />
             </div>
 
             {/* Sidebar — Members */}
