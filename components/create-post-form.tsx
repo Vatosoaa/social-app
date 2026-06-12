@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { createPost } from '@/app/actions/posts';
 import { Button } from '@/components/ui/button';
 import { Image as ImageIcon, Loader2, SendHorizonal, Video, X } from 'lucide-react';
@@ -55,7 +55,8 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
     setMediaTab(null);
   };
 
-  const handleSuccess = () => {
+  // Reset form after successful post — must be inside useEffect to avoid infinite re-render
+  useEffect(() => {
     if (state?.success) {
       formRef.current?.reset();
       setMediaUrl('');
@@ -63,12 +64,7 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
       setMediaTab(null);
       setCharCount(0);
     }
-  };
-
-  // Reset form on success
-  if (state?.success) {
-    handleSuccess();
-  }
+  }, [state?.success]);
 
   return (
     <div className="rounded-3xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl p-5 space-y-4">
