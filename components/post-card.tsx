@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useRef, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { updatePost, deletePost } from '@/app/actions/posts';
 import { Button } from '@/components/ui/button';
 import {
@@ -274,10 +275,13 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
-          <div className="flex items-center gap-3">
+          <Link
+            href={isOwner ? '/profile' : `/profile/${post.user_id}`}
+            className="flex items-center gap-3 group/author cursor-pointer"
+          >
             {/* Avatar with ring glow */}
             <div className="relative flex-shrink-0">
-              <div className="h-11 w-11 rounded-full overflow-hidden ring-2 ring-zinc-800 group-hover:ring-violet-500/30 transition-all duration-300 bg-zinc-950">
+              <div className="h-11 w-11 rounded-full overflow-hidden ring-2 ring-zinc-800 group-hover/author:ring-violet-500/50 transition-all duration-300 bg-zinc-950">
                 {post.author_avatar ? (
                   <img src={post.author_avatar} alt={post.author_name} className="h-full w-full object-cover" />
                 ) : (
@@ -291,12 +295,12 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
             </div>
 
             <div>
-              <p className="text-sm font-bold text-zinc-100 leading-tight">
+              <p className="text-sm font-bold text-zinc-100 group-hover/author:text-violet-400 transition-colors leading-tight">
                 {post.author_name || 'Utilisateur'}
               </p>
               <p className="text-xs text-zinc-500 mt-0.5">{formatRelativeTime(post.created_at)}</p>
             </div>
-          </div>
+          </Link>
 
           {/* Actions menu */}
           {isOwner && !isOptimistic && (
@@ -513,19 +517,23 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                         <div key={comment.id} className="space-y-3">
                           {/* Parent Comment */}
                           <div className="flex items-start gap-3 text-xs">
-                            <div className="h-8 w-8 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0 mt-0.5">
-                              {comment.author_avatar ? (
-                                <img src={comment.author_avatar} alt={comment.author_name} className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[9px] font-bold text-zinc-500">
-                                  {comment.author_name?.charAt(0)?.toUpperCase() || 'U'}
-                                </div>
-                              )}
-                            </div>
+                            <Link href={currentUser?.id === comment.user_id ? "/profile" : `/profile/${comment.user_id}`}>
+                              <div className="h-8 w-8 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0 mt-0.5 hover:border-violet-500/50 transition-colors cursor-pointer">
+                                {comment.author_avatar ? (
+                                  <img src={comment.author_avatar} alt={comment.author_name} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[9px] font-bold text-zinc-500">
+                                    {comment.author_name?.charAt(0)?.toUpperCase() || 'U'}
+                                  </div>
+                                )}
+                              </div>
+                            </Link>
                             <div className="flex-1 space-y-1">
                               <div className="bg-zinc-900/30 border border-zinc-850/60 rounded-2xl px-3.5 py-2">
                                 <div className="flex items-center justify-between mb-0.5">
-                                  <span className="font-bold text-zinc-200">{comment.author_name}</span>
+                                  <Link href={currentUser?.id === comment.user_id ? "/profile" : `/profile/${comment.user_id}`} className="font-bold text-zinc-200 hover:text-violet-400 transition-colors cursor-pointer">
+                                    {comment.author_name}
+                                  </Link>
                                   <span className="text-[10px] text-zinc-550">{formatRelativeTime(comment.created_at)}</span>
                                 </div>
                                 <p className="text-zinc-300 leading-relaxed">{comment.content}</p>
@@ -582,19 +590,23 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
                           {/* Nested Replies list */}
                           {replies.map((reply) => (
                             <div key={reply.id} className="flex items-start gap-3 pl-10 text-xs">
-                              <div className="h-7 w-7 rounded-full overflow-hidden border border-zinc-850 bg-zinc-950 flex-shrink-0 mt-0.5">
-                                {reply.author_avatar ? (
-                                  <img src={reply.author_avatar} alt={reply.author_name} className="h-full w-full object-cover" />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[8px] font-bold text-zinc-500">
-                                    {reply.author_name?.charAt(0)?.toUpperCase() || 'U'}
-                                  </div>
-                                )}
-                              </div>
+                               <Link href={currentUser?.id === reply.user_id ? "/profile" : `/profile/${reply.user_id}`}>
+                                <div className="h-7 w-7 rounded-full overflow-hidden border border-zinc-850 bg-zinc-950 flex-shrink-0 mt-0.5 hover:border-violet-500/50 transition-colors cursor-pointer">
+                                  {reply.author_avatar ? (
+                                    <img src={reply.author_avatar} alt={reply.author_name} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[8px] font-bold text-zinc-500">
+                                      {reply.author_name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                  )}
+                                </div>
+                              </Link>
                               <div className="flex-1 space-y-1">
                                 <div className="bg-zinc-950/40 border border-zinc-900 rounded-2xl px-3.5 py-2">
                                   <div className="flex items-center justify-between mb-0.5">
-                                    <span className="font-bold text-zinc-300">{reply.author_name}</span>
+                                    <Link href={currentUser?.id === reply.user_id ? "/profile" : `/profile/${reply.user_id}`} className="font-bold text-zinc-300 hover:text-violet-400 transition-colors cursor-pointer">
+                                      {reply.author_name}
+                                    </Link>
                                     <span className="text-[10px] text-zinc-550">{formatRelativeTime(reply.created_at)}</span>
                                   </div>
                                   <p className="text-zinc-350 leading-relaxed">{reply.content}</p>

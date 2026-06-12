@@ -1,13 +1,16 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { updateProfile, logout } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Image as ImageIcon, Loader2, LogOut, Sparkles, User } from 'lucide-react';
-import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getFollowers, getFollowing, toggleFollow } from '@/app/actions/follows';
+import type { FollowUser } from '@/app/actions/follows';
+import { Camera, Image as ImageIcon, Loader2, LogOut, Sparkles, User, Users, Check } from 'lucide-react';
 
 interface ProfileFormProps {
   user: {
@@ -16,6 +19,8 @@ interface ProfileFormProps {
     name: string;
     bio: string;
     avatar_url: string;
+    followers_count: number;
+    following_count: number;
   };
 }
 
@@ -25,6 +30,35 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   const [state, action, pending] = useActionState(updateProfile, undefined);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [charCount, setCharCount] = useState((user.bio || '').length);
+  const [followingCount, setFollowingCount] = useState(user.following_count);
+  const [dialogType, setDialogType] = useState<'followers' | 'following' | null>(null);
+  const [usersList, setUsersList] = useState<FollowUser[]>([]);
+  const [loadingList, setLoadingList] = useState(false);
+
+  const openUsersDialog = async (type: 'followers' | 'following') => {
+    setDialogType(type);
+    setLoadingList(true);
+    try {
+      const data = type === 'followers'
+        ? await getFollowers(user.id)
+        : await getFollowing(user.id);
+      setUsersList(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  const handleListFollowToggle = async (userId: number) => {
+    const res = await toggleFollow(userId);
+    if (res.success) {
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, is_following: res.following || false } : u))
+      );
+      setFollowingCount((prev) => (res.following ? prev + 1 : Math.max(0, prev - 1)));
+    }
+  };
 
   // Read upload file as base64
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,12 +92,11 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       <main className="relative z-10 w-full max-w-2xl space-y-6">
         {/* Header navigation bar */}
         <div className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-md rounded-2xl p-4">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-violet-500 animate-ping" />
-            <span className="text-sm font-semibold tracking-wider bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent uppercase">
-              Réseau Social
-            </span>
-          </div>
+          <Link href="/">
+            <Button variant="ghost" className="h-9 gap-1.5 text-zinc-400 hover:text-zinc-200 rounded-xl text-xs">
+              ← Retour au fil
+            </Button>
+          </Link>
           <form action={logout}>
             <Button
               type="submit"
@@ -84,6 +117,25 @@ export default function ProfileForm({ user }: ProfileFormProps) {
             <CardDescription className="text-zinc-400 text-sm">
               Gérez vos informations de compte et votre apparence publique
             </CardDescription>
+
+            {/* Followers / Following Stats */}
+            <div className="flex items-center gap-4 pt-3 pb-1">
+              <button
+                type="button"
+                onClick={() => openUsersDialog('followers')}
+                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <span className="font-bold text-zinc-200">{user.followers_count}</span> abonnés
+              </button>
+              <span className="h-3 w-[1px] bg-zinc-800" />
+              <button
+                type="button"
+                onClick={() => openUsersDialog('following')}
+                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <span className="font-bold text-zinc-200">{followingCount}</span> abonnements
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Banner State Notification */}
@@ -256,6 +308,76 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           </CardContent>
         </Card>
       </main>
+
+      {/* Dialog for Followers / Following Lists */}
+      <Dialog open={dialogType !== null} onOpenChange={(open) => !open && setDialogType(null)}>
+        <DialogContent className="bg-zinc-900/95 backdrop-blur-xl border-zinc-800 rounded-3xl text-zinc-100 max-w-md shadow-2xl shadow-black/60">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-zinc-100 flex items-center gap-2">
+              <Users className="h-4 w-4 text-violet-400" />
+              {dialogType === 'followers' ? 'Abonnés' : 'Abonnements'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-2 max-h-[350px] overflow-y-auto pr-1 space-y-4">
+            {loadingList ? (
+              <div className="flex items-center justify-center py-8 text-zinc-550 text-xs gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
+                Chargement de la liste...
+              </div>
+            ) : usersList.length > 0 ? (
+              <ul className="space-y-3.5">
+                {usersList.map((item) => {
+                  const isSelf = item.id === user.id;
+                  const profilePath = isSelf ? '/profile' : `/profile/${item.id}`;
+                  return (
+                    <li key={item.id} className="flex items-center justify-between gap-3 group/dialog-item">
+                      <Link
+                        href={profilePath}
+                        onClick={() => setDialogType(null)}
+                        className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0 group-hover/dialog-item:border-violet-500/40 transition-colors">
+                          {item.avatar_url ? (
+                            <img src={item.avatar_url} alt={item.name || ''} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-[10px] font-bold text-zinc-500">
+                              {item.name?.charAt(0)?.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-zinc-200 group-hover/dialog-item:text-violet-400 transition-colors truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-[10px] text-zinc-550 truncate">{item.bio || 'Pas de biographie.'}</p>
+                        </div>
+                      </Link>
+
+                      {!isSelf && (
+                        <Button
+                          onClick={() => handleListFollowToggle(item.id)}
+                          type="button"
+                          size="sm"
+                          className={`h-7 px-3 text-[10px] font-bold rounded-lg transition-all duration-200 ${
+                            item.is_following
+                              ? 'bg-zinc-800 hover:bg-rose-950/20 text-zinc-300 hover:text-rose-450 border border-zinc-700/60'
+                              : 'bg-violet-600 hover:bg-violet-500 text-white'
+                          }`}
+                        >
+                          {item.is_following ? 'Abonné' : 'Suivre'}
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-xs text-zinc-550 text-center py-6">Aucun utilisateur trouvé.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

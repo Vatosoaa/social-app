@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { createPost } from '@/app/actions/posts';
 import { Button } from '@/components/ui/button';
 import { Image as ImageIcon, Loader2, SendHorizonal, Video, X } from 'lucide-react';
@@ -69,8 +70,8 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
   return (
     <div className="rounded-3xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl p-5 space-y-4">
       {/* Author row */}
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0">
+      <Link href="/profile" className="flex items-center gap-3 group/author cursor-pointer">
+        <div className="h-10 w-10 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0 group-hover/author:border-violet-500/50 transition-colors">
           {currentUser.avatar_url ? (
             <img src={currentUser.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
           ) : (
@@ -79,8 +80,8 @@ export default function CreatePostForm({ currentUser }: CreatePostFormProps) {
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold text-zinc-300">{currentUser.name}</p>
-      </div>
+        <p className="text-sm font-semibold text-zinc-300 group-hover/author:text-violet-400 transition-colors">{currentUser.name}</p>
+      </Link>
 
       <form ref={formRef} action={action} className="space-y-3">
         {/* Content textarea */}
