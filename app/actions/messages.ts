@@ -159,6 +159,32 @@ export async function sendMessage(
   }
 
   try {
+    const conversationRes = await sql`
+      SELECT id
+      FROM conversations
+      WHERE id = ${conversationId}
+        AND (user1_id = ${currentUser.id} OR user2_id = ${currentUser.id})
+      LIMIT 1
+    `;
+
+    if (conversationRes.rows.length === 0) {
+      return { success: false, message: 'Conversation introuvable ou non autorisée.' };
+    }
+
+    if (parentMessageId) {
+      const parentRes = await sql`
+        SELECT id
+        FROM messages
+        WHERE id = ${parentMessageId}
+          AND conversation_id = ${conversationId}
+        LIMIT 1
+      `;
+
+      if (parentRes.rows.length === 0) {
+        return { success: false, message: 'Message de réponse introuvable.' };
+      }
+    }
+
     const insertRes = await sql`
       INSERT INTO messages (conversation_id, sender_id, content, image_url, parent_message_id, status)
       VALUES (${conversationId}, ${currentUser.id}, ${content ? content.trim() : null}, ${imageUrl}, ${parentMessageId}, 'sent')

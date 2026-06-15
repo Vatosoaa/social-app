@@ -8,7 +8,23 @@ interface AlertContextType {
   showConfirm: (message: string) => Promise<boolean>;
 }
 
-const AlertContext = createContext<AlertContextType | undefined>(undefined);
+const AlertContext = createContext<AlertContextType>({
+  showAlert: async (msg: string) => {
+    if (typeof window !== 'undefined') {
+      window.alert(msg);
+    } else {
+      console.log('Alert (fallback):', msg);
+    }
+  },
+  showConfirm: async (msg: string) => {
+    if (typeof window !== 'undefined') {
+      return window.confirm(msg);
+    } else {
+      console.log('Confirm (fallback):', msg);
+      return false;
+    }
+  }
+});
 
 export function AlertProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,9 +120,5 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAlert() {
-  const context = useContext(AlertContext);
-  if (!context) {
-    throw new Error('useAlert must be used within an AlertProvider');
-  }
-  return context;
+  return useContext(AlertContext);
 }

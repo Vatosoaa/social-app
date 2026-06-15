@@ -69,7 +69,7 @@ export default function ChatFloatingWindow({
   // Connect WebSocket
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3001`;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}//${window.location.hostname}:3001`;
 
     function connect() {
       const socket = new WebSocket(wsUrl);
@@ -85,8 +85,12 @@ export default function ChatFloatingWindow({
           const { type, payload } = JSON.parse(event.data);
           if (type === 'new_message') {
             const newMsg = payload as ChatMessage;
+            if (newMsg.sender_id === currentUser.id) return;
             if (newMsg.conversation_id === convId) {
-              setMessages(prev => [...prev, newMsg]);
+              setMessages(prev => {
+                if (prev.some(m => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+              });
               markAsRead(convId);
               socket.send(JSON.stringify({ type: 'message_seen', payload: { targetId: newMsg.sender_id, conversationId: convId } }));
             }

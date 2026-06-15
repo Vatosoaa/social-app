@@ -150,7 +150,7 @@ export default function Navbar({
     if (!currentUser) return;
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3001`;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}//${window.location.hostname}:3001`;
     let socket: WebSocket | null = null;
     
     function connect() {
