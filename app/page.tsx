@@ -155,7 +155,7 @@ export default async function Home({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-zinc-950 font-sans text-zinc-100 overflow-hidden">
+    <div className="relative flex flex-col h-screen bg-zinc-950 font-sans text-zinc-100 overflow-hidden">
       {/* Background glows */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
@@ -167,13 +167,13 @@ export default async function Home({ searchParams }: PageProps) {
         unreadMessagesCount={unreadMessagesCount} 
       />
 
-      <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
+      <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 flex flex-col overflow-hidden">
         {/* ─── AUTHENTICATED LAYOUT ─── */}
         {currentUser ? (
-          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr_300px] gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr_300px] gap-6 h-full">
             {/* Left Sidebar Navigation */}
-            <aside className="hidden md:block">
-              <div className="sticky top-24 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-6">
+            <aside className="hidden md:flex flex-col overflow-y-auto scrollbar-hide">
+              <div className="my-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-6">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider pl-3">Navigation</p>
                   <nav className="space-y-1">
@@ -229,7 +229,7 @@ export default async function Home({ searchParams }: PageProps) {
             </aside>
 
             {/* Feed column */}
-            <div className="space-y-5 min-w-0">
+            <div className="overflow-y-auto scrollbar-hide py-8 space-y-5 min-w-0">
               {/* Error banner */}
               {error && (
                 <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-900/30 text-rose-300 text-sm">
@@ -237,16 +237,20 @@ export default async function Home({ searchParams }: PageProps) {
                 </div>
               )}
               <PostsFeed initialPosts={posts} currentUser={currentUser} isFavoritesFilter={filter === 'favorites'} />
+              <footer className="pt-6 text-center text-xs text-zinc-600 border-t border-zinc-900/60">
+                <p>&copy; 2026 Twinkly Inc. Conçu avec amour, Next.js 16 et Tailwind CSS v4.</p>
+              </footer>
             </div>
 
             {/* Sidebar — Suggestions */}
-            <aside className="hidden lg:block">
+            <aside className="hidden lg:flex flex-col overflow-y-auto scrollbar-hide">
               <SuggestionsSidebar initialSuggestions={suggestions} currentUserId={currentUser.id} />
             </aside>
           </div>
         ) : (
           /* ─── LANDING (UNAUTHENTICATED) ─── */
-          <div className="text-center space-y-6 max-w-3xl mx-auto mt-12 animate-fade-in">
+          <div className="overflow-y-auto scrollbar-hide flex-1">
+          <div className="text-center space-y-6 max-w-3xl mx-auto mt-12 pb-12 animate-fade-in">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-950/30 border border-violet-800/30 text-violet-400 text-xs font-semibold mb-2">
               <Sparkles className="h-3.5 w-3.5" /> Une expérience utilisateur premium
             </div>
@@ -278,12 +282,9 @@ export default async function Home({ searchParams }: PageProps) {
               ))}
             </div>
           </div>
+          </div>
         )}
       </main>
-
-      <footer className="relative z-10 py-6 text-center text-xs text-zinc-600 border-t border-zinc-900/60">
-        <p>&copy; 2026 Twinkly Inc. Conçu avec amour, Next.js 16 et Tailwind CSS v4.</p>
-      </footer>
     </div>
   );
 }

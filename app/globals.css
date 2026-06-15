@@ -128,3 +128,12 @@
     @apply font-sans;
   }
 }
+
+/* Hide native scrollbar but keep scroll behavior */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
