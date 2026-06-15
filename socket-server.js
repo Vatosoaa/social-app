@@ -1,8 +1,9 @@
-const { WebSocketServer } = require('ws');
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { WebSocketServer, WebSocket } = require('ws');
 
 const wss = new WebSocketServer({ port: 3001 });
 
-// Map to store active userId -> WebSocket client connections
+// Map to store active userId -> Set of WebSocket client connections
 const clients = new Map();
 
 // Map to store last active timestamps (ISO Strings or 'online')
@@ -21,7 +22,10 @@ wss.on('connection', (ws) => {
       switch (type) {
         case 'register':
           authenticatedUserId = payload.userId;
-          clients.set(authenticatedUserId, ws);
+          if (!clients.has(authenticatedUserId)) {
+            clients.set(authenticatedUserId, new Set());
+          }
+          clients.get(authenticatedUserId).add(ws);
           lastActive.set(authenticatedUserId, 'online');
           
           // Notify other clients about the online status
@@ -30,63 +34,90 @@ wss.on('connection', (ws) => {
             payload: { userId: authenticatedUserId, status: 'online' }
           });
           
-          console.log(`User ${authenticatedUserId} registered`);
+          console.log(`User ${authenticatedUserId} registered (total connections: ${clients.get(authenticatedUserId).size})`);
           break;
 
         case 'send_message':
           // Relay message in real-time to the recipient if online
           const recipientId = payload.recipientId;
-          const targetSocket = clients.get(recipientId);
-          if (targetSocket && targetSocket.readyState === ws.OPEN) {
-            targetSocket.send(JSON.stringify({
-              type: 'new_message',
-              payload: payload.message
-            }));
+          const recipientSockets = clients.get(recipientId);
+          const messageEvent = JSON.stringify({
+            type: 'new_message',
+            payload: payload.message
+          });
+
+          if (recipientSockets) {
+            for (const socket of recipientSockets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(messageEvent);
+              }
+            }
           }
           break;
 
         case 'typing':
-          const typingTarget = clients.get(payload.targetId);
-          if (typingTarget && typingTarget.readyState === ws.OPEN) {
-            typingTarget.send(JSON.stringify({
+          const typingTargets = clients.get(payload.targetId);
+          if (typingTargets) {
+            const typingEvent = JSON.stringify({
               type: 'typing',
               payload: { conversationId: payload.conversationId }
-            }));
+            });
+            for (const socket of typingTargets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(typingEvent);
+              }
+            }
           }
           break;
 
         case 'stop_typing':
-          const stopTarget = clients.get(payload.targetId);
-          if (stopTarget && stopTarget.readyState === ws.OPEN) {
-            stopTarget.send(JSON.stringify({
+          const stopTargets = clients.get(payload.targetId);
+          if (stopTargets) {
+            const stopEvent = JSON.stringify({
               type: 'stop_typing',
               payload: { conversationId: payload.conversationId }
-            }));
+            });
+            for (const socket of stopTargets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(stopEvent);
+              }
+            }
           }
           break;
 
         case 'message_seen':
-          const seenTarget = clients.get(payload.targetId);
-          if (seenTarget && seenTarget.readyState === ws.OPEN) {
-            seenTarget.send(JSON.stringify({
+          const seenTargets = clients.get(payload.targetId);
+          if (seenTargets) {
+            const seenEvent = JSON.stringify({
               type: 'message_seen',
               payload: { conversationId: payload.conversationId }
-            }));
+            });
+            for (const socket of seenTargets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(seenEvent);
+              }
+            }
           }
           break;
 
         case 'message_delivered':
-          const deliveredTarget = clients.get(payload.targetId);
-          if (deliveredTarget && deliveredTarget.readyState === ws.OPEN) {
-            deliveredTarget.send(JSON.stringify({
+          const deliveredTargets = clients.get(payload.targetId);
+          if (deliveredTargets) {
+            const deliveredEvent = JSON.stringify({
               type: 'message_delivered',
               payload: { conversationId: payload.conversationId }
-            }));
+            });
+            for (const socket of deliveredTargets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(deliveredEvent);
+              }
+            }
           }
           break;
 
         case 'query_status':
-          const status = clients.has(payload.targetId) 
+          const hasConnections = clients.has(payload.targetId) && clients.get(payload.targetId).size > 0;
+          const status = hasConnections 
             ? 'online' 
             : (lastActive.get(payload.targetId) || 'offline');
           
@@ -103,26 +134,36 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     if (authenticatedUserId) {
-      clients.delete(authenticatedUserId);
-      const isoString = new Date().toISOString();
-      lastActive.set(authenticatedUserId, isoString);
+      const userSockets = clients.get(authenticatedUserId);
+      if (userSockets) {
+        userSockets.delete(ws);
+        if (userSockets.size === 0) {
+          clients.delete(authenticatedUserId);
+          const isoString = new Date().toISOString();
+          lastActive.set(authenticatedUserId, isoString);
 
-      // Broadcast user disconnected status
-      broadcast({
-        type: 'user_status',
-        payload: { userId: authenticatedUserId, status: isoString }
-      });
-      
-      console.log(`User ${authenticatedUserId} disconnected`);
+          // Broadcast user disconnected status
+          broadcast({
+            type: 'user_status',
+            payload: { userId: authenticatedUserId, status: isoString }
+          });
+          
+          console.log(`User ${authenticatedUserId} completely disconnected`);
+        } else {
+          console.log(`User ${authenticatedUserId} closed one connection (remaining: ${userSockets.size})`);
+        }
+      }
     }
   });
 });
 
 function broadcast(message) {
   const payload = JSON.stringify(message);
-  for (const client of clients.values()) {
-    if (client.readyState === 1) { // 1 = OPEN
-      client.send(payload);
+  for (const userSockets of clients.values()) {
+    for (const client of userSockets) {
+      if (client.readyState === 1) { // 1 = OPEN
+        client.send(payload);
+      }
     }
   }
 }

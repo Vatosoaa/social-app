@@ -73,7 +73,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
   // 1. Establish WebSocket Connection
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3001`;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}//${window.location.hostname}:3001`;
 
     function connect() {
       const socket = new WebSocket(wsUrl);
@@ -104,9 +104,15 @@ export default function MessagesClient({ currentUser, initialConversations, init
           switch (type) {
             case 'new_message':
               const newMsg = payload as ChatMessage;
+              if (newMsg.sender_id === currentUser.id) {
+                break;
+              }
               // If the message is in the active chat, display it and mark seen
               if (activeId && newMsg.conversation_id === activeId) {
-                setMessages(prev => [...prev, newMsg]);
+                setMessages(prev => {
+                  if (prev.some(m => m.id === newMsg.id)) return prev;
+                  return [...prev, newMsg];
+                });
                 
                 // Call mark read Server Action and send socket ACK
                 markAsRead(activeId);
