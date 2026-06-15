@@ -32,7 +32,7 @@ export default function SuggestionsSidebar({ initialSuggestions, currentUserId }
 
   if (suggestions.length === 0) {
     return (
-      <div className="sticky top-24 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 text-center">
+      <div className="my-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 text-center">
         <Sparkles className="h-5 w-5 text-violet-400 mx-auto mb-2 animate-pulse" />
         <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Suggestions</p>
         <p className="text-xs text-zinc-550">Vous suivez déjà tout le monde ! ✨</p>
@@ -41,7 +41,7 @@ export default function SuggestionsSidebar({ initialSuggestions, currentUserId }
   }
 
   return (
-    <div className="sticky top-24 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-4">
+    <div className="my-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-4">
       <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 uppercase tracking-wider">
         <span className="flex items-center gap-2">
           <UserPlus className="h-3.5 w-3.5 text-violet-400" />
