@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { WebSocketServer, WebSocket } = require('ws');
 
-const wss = new WebSocketServer({ port: 3001 });
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const wss = new WebSocketServer({ port: PORT });
 
 // Map to store active userId -> Set of WebSocket client connections
 const clients = new Map();
@@ -9,7 +10,7 @@ const clients = new Map();
 // Map to store last active timestamps (ISO Strings or 'online')
 const lastActive = new Map();
 
-console.log('WebSocket server running on port 3001...');
+console.log(`WebSocket server running on port ${PORT}...`);
 
 wss.on('connection', (ws) => {
   let authenticatedUserId = null;
