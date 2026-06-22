@@ -75,6 +75,24 @@ export interface DbUser {
   name: string;
   bio: string;
   avatar_url: string;
+  role?: string;
+  experience_level?: string;
+  favorite_artists?: string;
+  favorite_genre?: string;
+  software_equipment?: string;
+  music_mood?: string;
+  city_region?: string;
+  availability?: string;
+  badges?: string;
+  tags?: string;
+  social_youtube?: string;
+  social_instagram?: string;
+  social_tiktok?: string;
+  social_facebook?: string;
+  social_gmail?: string;
+  birthday?: string;
+  school?: string;
+  workplace?: string;
 }
 
 /**
@@ -91,7 +109,13 @@ export async function getCurrentUser(): Promise<DbUser | null> {
 
   try {
     const { rows } = await sql`
-      SELECT id, email, name, bio, avatar_url FROM users WHERE id = ${payload.userId}
+      SELECT 
+        id, email, name, bio, avatar_url,
+        role, experience_level, favorite_artists, favorite_genre,
+        software_equipment, music_mood, city_region, availability,
+        badges, tags, social_youtube, social_instagram, social_tiktok,
+        social_facebook, social_gmail, birthday::text as birthday, school, workplace
+      FROM users WHERE id = ${payload.userId}
     `;
     if (rows && rows.length > 0) {
       return rows[0] as DbUser;

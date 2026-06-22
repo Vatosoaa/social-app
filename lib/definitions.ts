@@ -23,7 +23,25 @@ export const ResetPasswordSchema = z.object({
 export const ProfileSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }).trim(),
   bio: z.string().max(200, { message: 'La biographie ne peut pas dépasser 200 caractères.' }).optional().or(z.literal('')),
-  avatar_url: z.string().url({ message: 'Veuillez entrer une URL d image valide.' }).optional().or(z.literal('')),
+  avatar_url: z.string().optional().or(z.literal('')),
+  role: z.string().max(100).optional().or(z.literal('')),
+  experience_level: z.string().max(100).optional().or(z.literal('')),
+  favorite_artists: z.string().max(255).optional().or(z.literal('')),
+  favorite_genre: z.string().max(100).optional().or(z.literal('')),
+  software_equipment: z.string().max(100).optional().or(z.literal('')),
+  music_mood: z.string().max(100).optional().or(z.literal('')),
+  city_region: z.string().max(100).optional().or(z.literal('')),
+  availability: z.string().max(100).optional().or(z.literal('')),
+  badges: z.string().max(500).optional().or(z.literal('')),
+  tags: z.string().max(500).optional().or(z.literal('')),
+  social_youtube: z.string().optional().or(z.literal('')),
+  social_instagram: z.string().optional().or(z.literal('')),
+  social_tiktok: z.string().optional().or(z.literal('')),
+  social_facebook: z.string().optional().or(z.literal('')),
+  social_gmail: z.string().optional().or(z.literal('')),
+  birthday: z.string().optional().or(z.literal('')),
+  school: z.string().max(255).optional().or(z.literal('')),
+  workplace: z.string().max(255).optional().or(z.literal('')),
 });
 
 export type FormState =
@@ -75,6 +93,7 @@ export interface Post {
   updated_at: string;
   author_name: string;
   author_avatar: string | null;
+  author_role?: string | null;
   likes_count: number;
   comments_count: number;
   user_has_liked: boolean;
@@ -100,4 +119,60 @@ export interface DbComment {
   author_name: string;
   author_avatar: string | null;
 }
+
+export interface Group {
+  id: number;
+  name: string;
+  description: string | null;
+  icon: string;
+  cover_url: string | null;
+  creator_id: number;
+  is_public: boolean;
+  created_at: string;
+  members_count: number;
+  is_member: boolean;
+  user_role: string | null;
+}
+
+export interface GroupMember {
+  id: number;
+  user_id: number;
+  name: string;
+  avatar_url: string | null;
+  role: string;
+  joined_at: string;
+}
+
+export interface GroupPost {
+  id: number;
+  group_id: number;
+  user_id: number;
+  content: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  created_at: string;
+  author_name: string;
+  author_avatar: string | null;
+}
+
+export interface Story {
+  id: number;
+  user_id: number;
+  media_url: string;
+  media_type: 'image' | 'video';
+  created_at: string;
+  is_viewed?: boolean;
+  music_url?: string | null;
+  music_title?: string | null;
+  music_artist?: string | null;
+}
+
+export interface UserStoryGroup {
+  user_id: number;
+  user_name: string;
+  user_avatar: string | null;
+  stories: Story[];
+  has_unviewed: boolean;
+}
+
 
