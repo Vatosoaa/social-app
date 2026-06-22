@@ -378,14 +378,14 @@ export default function MessagesClient({ currentUser, initialConversations, init
   };
 
   return (
-    <div className="flex h-full min-h-0 rounded-3xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-xl overflow-hidden">
+    <div className="flex h-full min-h-0 rounded-3xl bg-white border border-slate-200/60 shadow-sm overflow-hidden">
       
       {/* ─── CONVERSATIONS LIST SIDEBAR ─── */}
-      <div className={`w-full lg:w-[320px] flex-shrink-0 border-r border-zinc-800/80 flex flex-col bg-zinc-950/20 min-h-0 ${
+      <div className={`w-full lg:w-[320px] flex-shrink-0 border-r border-slate-200/60 flex flex-col bg-slate-50/80 min-h-0 ${
         activeId !== null ? 'hidden lg:flex' : 'flex'
       }`}>
-        <div className="p-4 border-b border-zinc-800/60 flex items-center justify-between">
-          <span className="text-sm font-extrabold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent uppercase tracking-wider">
+        <div className="p-4 border-b border-slate-200/60 flex items-center justify-between">
+          <span className="text-sm font-extrabold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent uppercase tracking-wider">
             Conversations
           </span>
           <Sparkles className="h-4 w-4 text-violet-500 animate-pulse" />
@@ -401,38 +401,38 @@ export default function MessagesClient({ currentUser, initialConversations, init
                 onClick={() => setActiveId(c.conversation_id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all group ${
                   isSelected 
-                    ? 'bg-violet-600/10 border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.05)]' 
-                    : 'hover:bg-zinc-800/40 border border-transparent'
+                    ? 'bg-violet-50 border border-violet-200/60 shadow-xs' 
+                    : 'hover:bg-slate-100/70 border border-transparent'
                 }`}
               >
                 {/* Avatar with status indicator */}
                 <div className="relative flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900">
+                  <div className="h-10 w-10 rounded-full overflow-hidden border border-slate-200 bg-slate-100">
                     {c.other_user_avatar ? (
                       <img src={c.other_user_avatar} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-zinc-800 text-zinc-400">
-                        <User className="h-5 w-5 text-zinc-500" />
+                      <div className="h-full w-full flex items-center justify-center bg-slate-100 text-slate-400">
+                        <User className="h-5 w-5" />
                       </div>
                     )}
                   </div>
                   {isOnline ? (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-zinc-950 shadow-[0_0_4px_rgba(16,185,129,0.6)]" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white shadow-[0_0_4px_rgba(16,185,129,0.6)]" />
                   ) : (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-zinc-600 ring-2 ring-zinc-950" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-slate-300 ring-2 ring-white" />
                   )}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <p className={`text-xs font-bold truncate ${isSelected ? 'text-violet-400' : 'text-zinc-200'}`}>
+                    <p className={`text-xs font-bold truncate ${isSelected ? 'text-violet-600' : 'text-slate-800'}`}>
                       {c.other_user_name}
                     </p>
-                    <span className="text-[9px] text-zinc-550">
+                    <span className="text-[9px] text-slate-400">
                       {formatRelativeTime(c.last_message_created_at)}
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
                     {c.last_message_content || (c.last_message_image ? '📷 Image' : 'Aucun message')}
                   </p>
                 </div>
@@ -449,18 +449,18 @@ export default function MessagesClient({ currentUser, initialConversations, init
       </div>
 
       {/* ─── ACTIVE CHAT AREA ─── */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950/10 ${
+      <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-white ${
         activeId === null ? 'hidden lg:flex' : 'flex'
       }`}>
         {activeConv ? (
           <>
             {/* Top Bar */}
-            <div className="p-4 border-b border-zinc-800/60 flex items-center justify-between bg-zinc-950/20">
+            <div className="p-4 border-b border-slate-200/60 flex items-center justify-between bg-slate-50/80">
               <div className="flex items-center gap-3 min-w-0">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden h-8 w-8 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-xl"
+                  className="lg:hidden h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
                   onClick={() => setActiveId(null)}
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -468,22 +468,22 @@ export default function MessagesClient({ currentUser, initialConversations, init
                 
                 {/* Contact Info */}
                 <div className="relative flex-shrink-0">
-                  <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-800">
+                  <div className="h-9 w-9 rounded-full overflow-hidden border border-slate-200 bg-slate-100">
                     {activeConv.other_user_avatar ? (
                       <img src={activeConv.other_user_avatar} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-zinc-800 text-zinc-400">
-                        <User className="h-4.5 w-4.5 text-zinc-500" />
+                      <div className="h-full w-full flex items-center justify-center bg-slate-100 text-slate-400">
+                        <User className="h-4 w-4" />
                       </div>
                     )}
                   </div>
                 </div>
                 
                 <div className="min-w-0">
-                  <Link href={`/profile/${activeConv.other_user_id}`} className="text-xs font-bold text-zinc-200 hover:text-violet-400 transition-colors truncate block">
+                  <Link href={`/profile/${activeConv.other_user_id}`} className="text-xs font-bold text-slate-800 hover:text-violet-600 transition-colors truncate block">
                     {activeConv.other_user_name}
                   </Link>
-                  <p className="text-[10px] text-zinc-550 flex items-center gap-1.5 mt-0.5">
+                  <p className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                     {otherPresence === 'online' ? (
                       <span className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -502,7 +502,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
             {/* Scrollable messages container */}
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {isPending && messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-xs text-zinc-500 gap-2">
+                <div className="flex items-center justify-center h-full text-xs text-slate-400 gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
                   Chargement de la discussion...
                 </div>
@@ -519,8 +519,8 @@ export default function MessagesClient({ currentUser, initialConversations, init
                     >
                       {/* Quoted parent message preview */}
                       {m.parent_message_id && (
-                        <div className="text-[10px] bg-zinc-900/80 border border-zinc-800 rounded-lg p-2 text-zinc-400 flex items-center gap-1.5 max-w-full">
-                          <CornerDownRight className="h-3 w-3 text-zinc-650 flex-shrink-0" />
+                        <div className="text-[10px] bg-slate-100 border border-slate-200 rounded-lg p-2 text-slate-500 flex items-center gap-1.5 max-w-full">
+                          <CornerDownRight className="h-3 w-3 text-slate-400 flex-shrink-0" />
                           <span className="truncate italic">
                             {m.parent_sender_name || 'Autre'}: {m.parent_content || '📷 Image'}
                           </span>
@@ -532,7 +532,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
                         {isOwn && (
                           <button
                             onClick={() => handleDelete(m.id)}
-                            className="opacity-0 group-hover/bubble:opacity-100 h-6 w-6 rounded-lg bg-zinc-900/60 hover:bg-rose-950/40 text-zinc-500 hover:text-rose-400 flex items-center justify-center transition-all flex-shrink-0 border border-zinc-800/80"
+                            className="opacity-0 group-hover/bubble:opacity-100 h-6 w-6 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-500 flex items-center justify-center transition-all flex-shrink-0 border border-slate-200"
                             title="Supprimer le message"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -542,7 +542,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
                         <div className={`rounded-2xl px-3.5 py-2.5 text-xs break-words max-w-full overflow-hidden ${
                           isOwn 
                             ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white font-medium shadow-md shadow-violet-500/5'
-                            : 'bg-zinc-800/60 text-zinc-200 border border-zinc-700/30'
+                            : 'bg-slate-100 text-slate-800 border border-slate-200/50'
                         }`}>
                           {m.image_url && (
                             <img src={m.image_url} alt="" className="rounded-lg max-h-[160px] object-cover mb-2 border border-black/20" />
@@ -553,7 +553,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
                         {!isOwn && (
                           <button
                             onClick={() => setReplyingTo(m)}
-                            className="opacity-0 group-hover/bubble:opacity-100 h-6 w-6 rounded-lg bg-zinc-900/60 hover:bg-zinc-850 text-zinc-500 hover:text-violet-400 flex items-center justify-center transition-all flex-shrink-0 border border-zinc-800/80"
+                            className="opacity-0 group-hover/bubble:opacity-100 h-6 w-6 rounded-lg bg-white hover:bg-slate-100 text-slate-400 hover:text-violet-500 flex items-center justify-center transition-all flex-shrink-0 border border-slate-200"
                             title="Répondre"
                           >
                             <CornerDownRight className="h-3 w-3" />
@@ -563,7 +563,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
 
                       {/* Info bar below bubble */}
                       <div className="flex items-center gap-1.5 px-1">
-                        <span className="text-[9px] text-zinc-600">{formatRelativeTime(m.created_at)}</span>
+                        <span className="text-[9px] text-slate-400">{formatRelativeTime(m.created_at)}</span>
                         {isOwn && (
                           <span className="flex items-center text-[9px]">
                             {m.status === 'seen' ? (
@@ -572,12 +572,12 @@ export default function MessagesClient({ currentUser, initialConversations, init
                                 <span>vu</span>
                               </span>
                             ) : m.status === 'delivered' ? (
-                              <span className="text-zinc-500 flex items-center gap-0.5" title="Délivré">
+                              <span className="text-slate-400 flex items-center gap-0.5" title="Délivré">
                                 <CheckCheck className="h-2.5 w-2.5" />
                                 <span>reçu</span>
                               </span>
                             ) : (
-                              <span className="text-zinc-600 flex items-center gap-0.5" title="Envoyé">
+                              <span className="text-slate-400 flex items-center gap-0.5" title="Envoyé">
                                 <Check className="h-2.5 w-2.5" />
                                 <span>envoyé</span>
                               </span>
@@ -593,7 +593,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
               {/* Typing bubble */}
               {isTyping && (
                 <div className="flex flex-col mr-auto max-w-[70%] space-y-1">
-                  <div className="rounded-2xl px-4 py-3 bg-zinc-800/40 text-zinc-400 border border-zinc-700/20 flex items-center gap-1 text-[11px] font-medium leading-none">
+                  <div className="rounded-2xl px-4 py-3 bg-slate-100 text-slate-500 border border-slate-200/50 flex items-center gap-1 text-[11px] font-medium leading-none">
                     <span className="flex gap-0.5 items-center mr-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce duration-600" />
                       <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce duration-600 delay-150" />
@@ -607,18 +607,18 @@ export default function MessagesClient({ currentUser, initialConversations, init
             </div>
 
             {/* Bottom input area */}
-            <div className="p-4 border-t border-zinc-800/60 space-y-3 bg-zinc-950/20">
+            <div className="p-4 border-t border-slate-200/60 space-y-3 bg-white">
               
               {/* Quoted message bar (replying mode) */}
               {replyingTo && (
-                <div className="flex items-center justify-between gap-3 bg-zinc-900/60 border border-zinc-800 px-3 py-2 rounded-xl text-xs text-zinc-400 animate-in slide-in-from-bottom-1 duration-150">
+                <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs text-slate-500 animate-in slide-in-from-bottom-1 duration-150">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <CornerDownRight className="h-3.5 w-3.5 text-violet-400 flex-shrink-0" />
                     <span className="truncate italic">
-                      En réponse à <strong className="text-zinc-300">{replyingTo.sender_id === currentUser.id ? 'Vous' : activeConv.other_user_name}</strong>: {replyingTo.content || '📷 Image'}
+                      En réponse à <strong className="text-slate-700">{replyingTo.sender_id === currentUser.id ? 'Vous' : activeConv.other_user_name}</strong>: {replyingTo.content || '📷 Image'}
                     </span>
                   </div>
-                  <button onClick={() => setReplyingTo(null)} className="h-5 w-5 flex items-center justify-center hover:bg-zinc-850 rounded-lg text-zinc-400 hover:text-zinc-200">
+                  <button onClick={() => setReplyingTo(null)} className="h-5 w-5 flex items-center justify-center hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -626,7 +626,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
 
               {/* Image upload preview */}
               {imageUrl && (
-                <div className="relative inline-block border border-zinc-800 rounded-xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="relative inline-block border border-slate-200 rounded-xl overflow-hidden animate-in zoom-in duration-200">
                   <img src={imageUrl} alt="Preview" className="h-20 w-20 object-cover" />
                   <button 
                     type="button" 
@@ -640,13 +640,13 @@ export default function MessagesClient({ currentUser, initialConversations, init
 
               {/* Emoji drawer */}
               {showEmojis && (
-                <div className="grid grid-cols-8 gap-1 p-2 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl animate-in fade-in zoom-in-95 duration-150 max-w-[320px]">
+                <div className="grid grid-cols-8 gap-1 p-2 bg-white border border-slate-200/60 rounded-2xl shadow-md animate-in fade-in zoom-in-95 duration-150 max-w-[320px]">
                   {EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => handleEmojiClick(emoji)}
-                      className="h-8 w-8 text-base flex items-center justify-center rounded-lg hover:bg-zinc-800/80 transition-colors active:scale-90"
+                      className="h-8 w-8 text-base flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors active:scale-90"
                     >
                       {emoji}
                     </button>
@@ -660,15 +660,15 @@ export default function MessagesClient({ currentUser, initialConversations, init
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowEmojis(prev => !prev)}
-                  className={`h-9 w-9 hover:bg-zinc-800/50 rounded-xl ${showEmojis ? 'text-violet-400 bg-violet-950/20' : 'text-zinc-550'}`}
+                  className={`h-9 w-9 hover:bg-slate-100 rounded-xl ${showEmojis ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}
                   title="Sélectionner un émoji"
                 >
                   <Smile className="h-4 w-4" />
                 </Button>
 
                 {/* Upload Image Button */}
-                <label className="h-9 w-9 hover:bg-zinc-800/50 rounded-xl flex items-center justify-center cursor-pointer text-zinc-550 transition-colors" title="Uploader une image">
-                  <ImageIcon className="h-4 w-4 text-zinc-550 hover:text-zinc-350" />
+                <label className="h-9 w-9 hover:bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer text-slate-400 transition-colors" title="Uploader une image">
+                  <ImageIcon className="h-4 w-4" />
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                 </label>
 
@@ -677,7 +677,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
                   placeholder="Écrire un message privé..."
                   value={inputText}
                   onChange={handleInputChange}
-                  className="flex-1 h-9 bg-zinc-950/50 border-zinc-800/80 rounded-xl text-xs placeholder:text-zinc-650 focus-visible:ring-violet-500"
+                  className="flex-1 h-9 bg-white border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus-visible:ring-violet-500"
                 />
 
                 <Button
@@ -693,9 +693,9 @@ export default function MessagesClient({ currentUser, initialConversations, init
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-            <Sparkles className="h-8 w-8 text-zinc-700 animate-pulse" />
-            <p className="text-sm font-semibold text-zinc-400">Sélectionnez une discussion</p>
-            <p className="text-xs text-zinc-600">Choisissez un utilisateur dans la liste pour commencer à discuter en direct.</p>
+            <Sparkles className="h-8 w-8 text-slate-300 animate-pulse" />
+            <p className="text-sm font-semibold text-slate-500">Sélectionnez une discussion</p>
+            <p className="text-xs text-slate-400">Choisissez un utilisateur dans la liste pour commencer à discuter en direct.</p>
           </div>
         )}
       </div>

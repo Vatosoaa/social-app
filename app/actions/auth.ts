@@ -233,6 +233,24 @@ export async function updateProfile(state: FormState, formData: FormData): Promi
     name: formData.get('name'),
     bio: formData.get('bio'),
     avatar_url: formData.get('avatar_url'),
+    role: formData.get('role'),
+    experience_level: formData.get('experience_level'),
+    favorite_artists: formData.get('favorite_artists'),
+    favorite_genre: formData.get('favorite_genre'),
+    software_equipment: formData.get('software_equipment'),
+    music_mood: formData.get('music_mood'),
+    city_region: formData.get('city_region'),
+    availability: formData.get('availability'),
+    badges: formData.get('badges'),
+    tags: formData.get('tags'),
+    social_youtube: formData.get('social_youtube'),
+    social_instagram: formData.get('social_instagram'),
+    social_tiktok: formData.get('social_tiktok'),
+    social_facebook: formData.get('social_facebook'),
+    social_gmail: formData.get('social_gmail'),
+    birthday: formData.get('birthday'),
+    school: formData.get('school'),
+    workplace: formData.get('workplace'),
   });
 
   if (!validatedFields.success) {
@@ -241,12 +259,39 @@ export async function updateProfile(state: FormState, formData: FormData): Promi
     };
   }
 
-  const { name, bio, avatar_url } = validatedFields.data;
+  const {
+    name, bio, avatar_url,
+    role, experience_level, favorite_artists, favorite_genre,
+    software_equipment, music_mood, city_region, availability,
+    badges, tags, social_youtube, social_instagram, social_tiktok,
+    social_facebook, social_gmail, birthday, school, workplace
+  } = validatedFields.data;
 
   try {
     await sql`
       UPDATE users
-      SET name = ${name}, bio = ${bio || ''}, avatar_url = ${avatar_url || ''}
+      SET 
+        name = ${name}, 
+        bio = ${bio || ''}, 
+        avatar_url = ${avatar_url || ''},
+        role = ${role || ''},
+        experience_level = ${experience_level || ''},
+        favorite_artists = ${favorite_artists || ''},
+        favorite_genre = ${favorite_genre || ''},
+        software_equipment = ${software_equipment || ''},
+        music_mood = ${music_mood || ''},
+        city_region = ${city_region || ''},
+        availability = ${availability || ''},
+        badges = ${badges || ''},
+        tags = ${tags || ''},
+        social_youtube = ${social_youtube || ''},
+        social_instagram = ${social_instagram || ''},
+        social_tiktok = ${social_tiktok || ''},
+        social_facebook = ${social_facebook || ''},
+        social_gmail = ${social_gmail || ''},
+        birthday = ${birthday || null},
+        school = ${school || ''},
+        workplace = ${workplace || ''}
       WHERE id = ${currentUser.id}
     `;
     

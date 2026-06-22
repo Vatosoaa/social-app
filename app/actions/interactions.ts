@@ -293,3 +293,22 @@ export async function getComments(postId: number): Promise<DbComment[]> {
     return [];
   }
 }
+
+export async function clearAllFavorites(): Promise<{ success: boolean; message?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return { success: false, message: 'Vous devez être connecté.' };
+  }
+
+  try {
+    await sql`
+      DELETE FROM favorites WHERE user_id = ${currentUser.id}
+    `;
+    revalidatePath('/');
+    return { success: true };
+  } catch (error) {
+    console.error('Error clearing favorites:', error);
+    return { success: false, message: 'Une erreur est survenue.' };
+  }
+}
+

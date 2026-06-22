@@ -37,9 +37,34 @@ export default async function PublicProfilePage({ params }: PageProps) {
         u.name, 
         u.bio, 
         u.avatar_url,
+        u.role,
+        u.experience_level,
+        u.favorite_artists,
+        u.favorite_genre,
+        u.software_equipment,
+        u.music_mood,
+        u.city_region,
+        u.availability,
+        u.badges,
+        u.tags,
+        u.social_youtube,
+        u.social_instagram,
+        u.social_tiktok,
+        u.social_facebook,
+        u.social_gmail,
+        u.birthday::text as birthday,
+        u.school,
+        u.workplace,
         (SELECT COUNT(*)::int FROM follows WHERE following_id = u.id) AS followers_count,
         (SELECT COUNT(*)::int FROM follows WHERE follower_id = u.id) AS following_count,
-        EXISTS(SELECT 1 FROM follows WHERE follower_id = ${currentUser.id} AND following_id = u.id) AS is_following
+        EXISTS(SELECT 1 FROM follows WHERE follower_id = ${currentUser.id} AND following_id = u.id) AS is_following,
+        EXISTS(
+          SELECT 1 FROM friendships 
+          WHERE (user_id1 = ${currentUser.id} AND user_id2 = u.id)
+             OR (user_id1 = u.id AND user_id2 = ${currentUser.id})
+        ) AS is_friend,
+        EXISTS(SELECT 1 FROM friend_requests WHERE sender_id = ${currentUser.id} AND receiver_id = u.id) AS has_sent_request,
+        (SELECT id FROM friend_requests WHERE sender_id = u.id AND receiver_id = ${currentUser.id} LIMIT 1) AS received_request_id
       FROM users u
       WHERE u.id = ${targetUserId}
     `;
@@ -101,9 +126,30 @@ export default async function PublicProfilePage({ params }: PageProps) {
         name: targetUser.name,
         bio: targetUser.bio,
         avatar_url: targetUser.avatar_url,
+        role: targetUser.role,
+        experience_level: targetUser.experience_level,
+        favorite_artists: targetUser.favorite_artists,
+        favorite_genre: targetUser.favorite_genre,
+        software_equipment: targetUser.software_equipment,
+        music_mood: targetUser.music_mood,
+        city_region: targetUser.city_region,
+        availability: targetUser.availability,
+        badges: targetUser.badges,
+        tags: targetUser.tags,
+        social_youtube: targetUser.social_youtube,
+        social_instagram: targetUser.social_instagram,
+        social_tiktok: targetUser.social_tiktok,
+        social_facebook: targetUser.social_facebook,
+        social_gmail: targetUser.social_gmail,
         followers_count: targetUser.followers_count || 0,
         following_count: targetUser.following_count || 0,
         is_following: targetUser.is_following || false,
+        birthday: targetUser.birthday || null,
+        school: targetUser.school || null,
+        workplace: targetUser.workplace || null,
+        is_friend: targetUser.is_friend || false,
+        has_sent_request: targetUser.has_sent_request || false,
+        received_request_id: targetUser.received_request_id || null,
       }}
       currentUser={currentUser}
       posts={posts}
