@@ -127,6 +127,24 @@ wss.on('connection', (ws) => {
             payload: { userId: payload.targetId, status }
           }));
           break;
+
+        case 'call_signal':
+          const targetSockets = clients.get(payload.targetId);
+          if (targetSockets) {
+            const signalEvent = JSON.stringify({
+              type: 'call_signal',
+              payload: {
+                senderId: authenticatedUserId,
+                signal: payload.signal
+              }
+            });
+            for (const socket of targetSockets) {
+              if (socket.readyState === WebSocket.OPEN) {
+                socket.send(signalEvent);
+              }
+            }
+          }
+          break;
       }
     } catch (e) {
       console.error('Failed to handle socket message:', e);
