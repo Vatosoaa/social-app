@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   User, Send, Image as ImageIcon, Loader2, Sparkles, X, 
   CornerDownRight, Check, CheckCheck, Eye, Trash2, ArrowLeft,
-  Smile
+  Smile, Video, Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import {
 import type { Conversation, ChatMessage } from '@/app/actions/messages';
 import type { DbUser } from '@/lib/session';
 import { useAlert } from '@/components/providers/alert-provider';
+import CallOverlay from './calling/call-overlay';
 
 interface MessagesClientProps {
   currentUser: DbUser;
@@ -43,6 +44,12 @@ function formatRelativeTime(dateStr: string | null): string {
   return `Il y a ${d}j`;
 }
 
+function formatCallDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
 export default function MessagesClient({ currentUser, initialConversations, initialActiveId }: MessagesClientProps) {
   const { showAlert, showConfirm } = useAlert();
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
@@ -58,6 +65,20 @@ export default function MessagesClient({ currentUser, initialConversations, init
   // Real-time states
   const [isTyping, setIsTyping] = useState(false);
   const [otherPresence, setOtherPresence] = useState<string>('offline');
+
+  // Calling states
+  interface CallState {
+    isOpen: boolean;
+    type: 'video' | 'voice';
+    direction: 'incoming' | 'outgoing';
+    otherUser: { id: number; name: string; avatar: string | null };
+    initialSignal?: any;
+  }
+  const [callState, setCallState] = useState<CallState | null>(null);
+  const callStateRef = useRef<CallState | null>(null);
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
 
   // Timers/Refs
   const socketRef = useRef<WebSocket | null>(null);
@@ -185,6 +206,43 @@ export default function MessagesClient({ currentUser, initialConversations, init
                 return c;
               }));
               break;
+
+            case 'call_signal':
+              const { senderId, signal } = payload;
+              console.log('WS call_signal received:', { senderId, signal, currentCallState: callStateRef.current });
+              if (signal.type === 'call-offer-init') {
+                if (!callStateRef.current) {
+                  console.log('Opening incoming call overlay');
+                  setCallState({
+                    isOpen: true,
+                    type: signal.callType,
+                    direction: 'incoming',
+                    otherUser: {
+                      id: senderId,
+                      name: signal.callerName,
+                      avatar: signal.callerAvatar
+                    },
+                    initialSignal: signal
+                  });
+                } else if (Number(callStateRef.current.otherUser.id) !== Number(senderId)) {
+                  console.log('Responding busy: callStateRef.current is active with different user', callStateRef.current);
+                  // Relays busy signal to incoming calling offer if user is already in call
+                  if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+                    socketRef.current.send(JSON.stringify({
+                      type: 'call_signal',
+                      payload: {
+                        targetId: senderId,
+                        signal: { type: 'busy' }
+                      }
+                    }));
+                  }
+                }
+              } else {
+                console.log('Forwarding signal to active overlay:', signal.type);
+                // Dispatch event to CallOverlay
+                window.dispatchEvent(new CustomEvent('call_signal', { detail: { senderId, signal } }));
+              }
+              break;
           }
         } catch (e) {
           console.error(e);
@@ -192,8 +250,10 @@ export default function MessagesClient({ currentUser, initialConversations, init
       };
 
       socket.onclose = () => {
-        console.log('WS Disconnected. Reconnecting in 3s...');
-        setTimeout(connect, 3000);
+        if (socketRef.current === socket) {
+          console.log('WS Disconnected. Reconnecting in 3s...');
+          setTimeout(connect, 3000);
+        }
       };
     }
 
@@ -348,6 +408,58 @@ export default function MessagesClient({ currentUser, initialConversations, init
     }
   };
 
+  const handleCallFinished = async (
+    type: 'video' | 'voice',
+    status: 'missed' | 'accepted' | 'busy' | 'no-answer',
+    durationSeconds: number
+  ) => {
+    if (!activeId || !activeConv) return;
+    
+    // Construct call log content
+    const content = `_call_log:${type}:${status}:${durationSeconds}_`;
+    
+    const res = await sendMessage(activeId, content, null, null);
+    if (res.success && res.messageData) {
+      const addedMsg = res.messageData;
+      setMessages(prev => [...prev, addedMsg]);
+
+      // Broadcast call log in real-time
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({
+          type: 'send_message',
+          payload: { 
+            recipientId: activeConv.other_user_id,
+            message: addedMsg
+          }
+        }));
+      }
+
+      // Update sidebar conversation preview
+      setConversations(prev => {
+        const updated = prev.map(c => {
+          if (c.conversation_id === activeId) {
+            const isVideo = type === 'video';
+            const logText = isVideo ? '📹 Appel vidéo' : '📞 Appel vocal';
+            return {
+              ...c,
+              last_message_content: logText,
+              last_message_image: null,
+              last_message_sender_id: currentUser.id,
+              last_message_status: 'sent',
+              last_message_created_at: new Date().toISOString()
+            };
+          }
+          return c;
+        });
+        return [...updated].sort((a, b) => {
+          const aTime = a.last_message_created_at ? new Date(a.last_message_created_at).getTime() : 0;
+          const bTime = b.last_message_created_at ? new Date(b.last_message_created_at).getTime() : 0;
+          return bTime - aTime;
+        });
+      });
+    }
+  };
+
   // Image upload handling
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -375,6 +487,16 @@ export default function MessagesClient({ currentUser, initialConversations, init
     if (res.success) {
       setMessages(prev => prev.filter(m => m.id !== msgId));
     }
+  };
+
+  const formatLastMessageContent = (content: string | null) => {
+    if (!content) return '';
+    if (content.startsWith('_call_log:')) {
+      const parts = content.split(':');
+      const type = parts[1];
+      return type === 'video' ? '📹 Appel vidéo' : '📞 Appel vocal';
+    }
+    return content;
   };
 
   return (
@@ -433,7 +555,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
                     </span>
                   </div>
                   <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                    {c.last_message_content || (c.last_message_image ? '📷 Image' : 'Aucun message')}
+                    {formatLastMessageContent(c.last_message_content) || (c.last_message_image ? '📷 Image' : 'Aucun message')}
                   </p>
                 </div>
 
@@ -497,6 +619,46 @@ export default function MessagesClient({ currentUser, initialConversations, init
                   </p>
                 </div>
               </div>
+
+              {/* Call Controls (Video Call and Voice Call) */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-500 hover:text-violet-600 hover:bg-slate-100 rounded-xl transition-all"
+                  onClick={() => setCallState({
+                    isOpen: true,
+                    type: 'video',
+                    direction: 'outgoing',
+                    otherUser: {
+                      id: activeConv.other_user_id,
+                      name: activeConv.other_user_name || 'Utilisateur',
+                      avatar: activeConv.other_user_avatar
+                    }
+                  })}
+                  title="Appel vidéo"
+                >
+                  <Video className="h-4.5 w-4.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-500 hover:text-violet-600 hover:bg-slate-100 rounded-xl transition-all"
+                  onClick={() => setCallState({
+                    isOpen: true,
+                    type: 'voice',
+                    direction: 'outgoing',
+                    otherUser: {
+                      id: activeConv.other_user_id,
+                      name: activeConv.other_user_name || 'Utilisateur',
+                      avatar: activeConv.other_user_avatar
+                    }
+                  })}
+                  title="Appel vocal"
+                >
+                  <Phone className="h-4.5 w-4.5" />
+                </Button>
+              </div>
             </div>
 
             {/* Scrollable messages container */}
@@ -539,18 +701,61 @@ export default function MessagesClient({ currentUser, initialConversations, init
                           </button>
                         )}
                         
-                        <div className={`rounded-2xl px-3.5 py-2.5 text-xs break-words max-w-full overflow-hidden ${
-                          isOwn 
-                            ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white font-medium shadow-md shadow-violet-500/5'
-                            : 'bg-slate-100 text-slate-800 border border-slate-200/50'
-                        }`}>
-                          {m.image_url && (
-                            <img src={m.image_url} alt="" className="rounded-lg max-h-[160px] object-cover mb-2 border border-black/20" />
-                          )}
-                          {m.content && <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>}
-                        </div>
+                        {m.content && m.content.startsWith('_call_log:') ? (
+                          (() => {
+                            const parts = m.content.split(':');
+                            const callType = parts[1]; // 'video' | 'voice'
+                            const callStatus = parts[2]; // 'missed' | 'accepted' | 'busy' | 'no-answer'
+                            const duration = parseInt(parts[3] || '0', 10);
 
-                        {!isOwn && (
+                            const isVideo = callType === 'video';
+                            const isMissed = callStatus === 'missed' || callStatus === 'no-answer';
+                            const isBusy = callStatus === 'busy';
+
+                            let title = isVideo ? 'Appel vidéo' : 'Appel vocal';
+                            let subtitle = '';
+                            if (isMissed) subtitle = 'Sans réponse';
+                            else if (isBusy) subtitle = 'Ligne occupée';
+                            else subtitle = `Terminé · ${formatCallDuration(duration)}`;
+
+                            return (
+                              <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs max-w-[240px] transition-all ${
+                                isMissed
+                                  ? 'bg-rose-50/80 border-rose-100 text-rose-950'
+                                  : 'bg-emerald-50/80 border-emerald-100 text-emerald-950'
+                              }`}>
+                                <div className={`h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isMissed ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'
+                                }`}>
+                                  {isVideo ? (
+                                    <Video className="h-4.5 w-4.5" />
+                                  ) : (
+                                    <Phone className="h-4.5 w-4.5" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-800 text-xs">{title}</p>
+                                  <p className={`text-[10px] mt-0.5 font-semibold ${
+                                    isMissed ? 'text-rose-600' : 'text-emerald-600'
+                                  }`}>{subtitle}</p>
+                                </div>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className={`rounded-2xl px-3.5 py-2.5 text-xs break-words max-w-full overflow-hidden ${
+                            isOwn 
+                              ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white font-medium shadow-md shadow-violet-500/5'
+                              : 'bg-slate-100 text-slate-800 border border-slate-200/50'
+                          }`}>
+                            {m.image_url && (
+                              <img src={m.image_url} alt="" className="rounded-lg max-h-[160px] object-cover mb-2 border border-black/20" />
+                            )}
+                            {m.content && <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>}
+                          </div>
+                        )}
+
+                        {!isOwn && !m.content?.startsWith('_call_log:') && (
                           <button
                             onClick={() => setReplyingTo(m)}
                             className="opacity-0 group-hover/bubble:opacity-100 h-6 w-6 rounded-lg bg-white hover:bg-slate-100 text-slate-400 hover:text-violet-500 flex items-center justify-center transition-all flex-shrink-0 border border-slate-200"
@@ -699,6 +904,20 @@ export default function MessagesClient({ currentUser, initialConversations, init
           </div>
         )}
       </div>
+
+      {/* Render active WebRTC Call overlay */}
+      {callState && callState.isOpen && (
+        <CallOverlay
+          currentUser={currentUser}
+          otherUser={callState.otherUser}
+          callType={callState.type}
+          direction={callState.direction}
+          socket={socketRef.current}
+          onClose={() => setCallState(null)}
+          initialSignal={callState.initialSignal}
+          onCallFinished={handleCallFinished}
+        />
+      )}
 
     </div>
   );
