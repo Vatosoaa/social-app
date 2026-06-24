@@ -251,6 +251,18 @@ export async function updateProfile(state: FormState, formData: FormData): Promi
     birthday: formData.get('birthday'),
     school: formData.get('school'),
     workplace: formData.get('workplace'),
+    gender_pronouns: formData.get('gender_pronouns'),
+    relationship_status: formData.get('relationship_status'),
+    languages: formData.get('languages'),
+    job_title: formData.get('job_title'),
+    skills: formData.get('skills'),
+    phone: formData.get('phone'),
+    hometown: formData.get('hometown'),
+    website: formData.get('website'),
+    social_linkedin: formData.get('social_linkedin'),
+    hobbies: formData.get('hobbies'),
+    interests: formData.get('interests'),
+    cover_url: formData.get('cover_url'),
   });
 
   if (!validatedFields.success) {
@@ -264,7 +276,9 @@ export async function updateProfile(state: FormState, formData: FormData): Promi
     role, experience_level, favorite_artists, favorite_genre,
     software_equipment, music_mood, city_region, availability,
     badges, tags, social_youtube, social_instagram, social_tiktok,
-    social_facebook, social_gmail, birthday, school, workplace
+    social_facebook, social_gmail, birthday, school, workplace,
+    gender_pronouns, relationship_status, languages, job_title, skills,
+    phone, hometown, website, social_linkedin, hobbies, interests, cover_url
   } = validatedFields.data;
 
   try {
@@ -291,7 +305,19 @@ export async function updateProfile(state: FormState, formData: FormData): Promi
         social_gmail = ${social_gmail || ''},
         birthday = ${birthday || null},
         school = ${school || ''},
-        workplace = ${workplace || ''}
+        workplace = ${workplace || ''},
+        gender_pronouns = ${gender_pronouns || ''},
+        relationship_status = ${relationship_status || ''},
+        languages = ${languages || ''},
+        job_title = ${job_title || ''},
+        skills = ${skills || ''},
+        phone = ${phone || ''},
+        hometown = ${hometown || ''},
+        website = ${website || ''},
+        social_linkedin = ${social_linkedin || ''},
+        hobbies = ${hobbies || ''},
+        interests = ${interests || ''},
+        cover_url = ${cover_url || ''}
       WHERE id = ${currentUser.id}
     `;
     

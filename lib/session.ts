@@ -93,6 +93,18 @@ export interface DbUser {
   birthday?: string;
   school?: string;
   workplace?: string;
+  gender_pronouns?: string;
+  relationship_status?: string;
+  languages?: string;
+  job_title?: string;
+  skills?: string;
+  phone?: string;
+  hometown?: string;
+  website?: string;
+  social_linkedin?: string;
+  hobbies?: string;
+  interests?: string;
+  cover_url?: string;
 }
 
 /**
@@ -114,7 +126,9 @@ export async function getCurrentUser(): Promise<DbUser | null> {
         role, experience_level, favorite_artists, favorite_genre,
         software_equipment, music_mood, city_region, availability,
         badges, tags, social_youtube, social_instagram, social_tiktok,
-        social_facebook, social_gmail, birthday::text as birthday, school, workplace
+        social_facebook, social_gmail, birthday::text as birthday, school, workplace,
+        gender_pronouns, relationship_status, languages, job_title, skills,
+        phone, hometown, website, social_linkedin, hobbies, interests, cover_url
       FROM users WHERE id = ${payload.userId}
     `;
     if (rows && rows.length > 0) {
