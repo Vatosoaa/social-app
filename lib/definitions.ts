@@ -42,6 +42,18 @@ export const ProfileSchema = z.object({
   birthday: z.string().optional().or(z.literal('')),
   school: z.string().max(255).optional().or(z.literal('')),
   workplace: z.string().max(255).optional().or(z.literal('')),
+  gender_pronouns: z.string().max(100).optional().or(z.literal('')),
+  relationship_status: z.string().max(100).optional().or(z.literal('')),
+  languages: z.string().max(255).optional().or(z.literal('')),
+  job_title: z.string().max(255).optional().or(z.literal('')),
+  skills: z.string().max(1000).optional().or(z.literal('')),
+  phone: z.string().max(100).optional().or(z.literal('')),
+  hometown: z.string().max(255).optional().or(z.literal('')),
+  website: z.string().max(255).optional().or(z.literal('')),
+  social_linkedin: z.string().optional().or(z.literal('')),
+  hobbies: z.string().max(1000).optional().or(z.literal('')),
+  interests: z.string().max(1000).optional().or(z.literal('')),
+  cover_url: z.string().optional().or(z.literal('')),
 });
 
 export type FormState =
