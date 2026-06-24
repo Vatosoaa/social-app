@@ -432,11 +432,12 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
                     </button>
                   );
                 })}
+              </div>
             </div>
           </div>
 
           {/* Tab content area */}
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-300 mt-6">
                    {/* 1. ABOUT TAB */}
             {activeTab === 'about' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -729,7 +730,7 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
                           <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/40 hover:bg-slate-55 transition-all duration-300 space-y-3">
                             <div className="flex items-center gap-2">
                               <span className="p-1.5 rounded-xl bg-sky-50 text-sky-500">
-                                <Plus className="h-4 w-4" />
+                                <Heart className="h-4 w-4" />
                               </span>
                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loisirs &amp; Activités</span>
                             </div>
