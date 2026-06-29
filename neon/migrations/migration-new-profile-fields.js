@@ -3,7 +3,13 @@ const path = require('path');
 
 // Load .env manually to avoid extra dependencies
 try {
-  const envPath = path.join(__dirname, '.env');
+  let envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '.env');
+  }
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '..', '.env');
+  }
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {

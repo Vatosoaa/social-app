@@ -41,6 +41,8 @@ import {
   Star,
   MoreVertical,
   ChevronDown,
+  Clapperboard,
+  Flame,
 } from "lucide-react";
 import type { Post, UserStoryGroup } from "@/lib/definitions";
 import StoryViewer from "@/components/story-viewer";
@@ -733,8 +735,10 @@ export default function HomeClient({
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      await showAlert("Le fichier est trop volumineux. Maximum 5 Mo.");
+    const maxSize = type === 'video' ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxLabel = type === 'video' ? '50 Mo' : '5 Mo';
+    if (file.size > maxSize) {
+      await showAlert(`Le fichier est trop volumineux. Maximum ${maxLabel}.`);
       return;
     }
     const reader = new FileReader();
@@ -819,80 +823,92 @@ export default function HomeClient({
   if (!currentUser) {
     return (
       <div className="relative flex flex-col min-h-screen bg-zinc-950 font-sans text-zinc-100 overflow-hidden">
+        {/* Background Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f2e_1px,transparent_1px),linear-gradient(to_bottom,#1f1f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+
         {/* Background glows */}
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-25%] left-[-20%] w-[600px] h-[600px] rounded-full bg-violet-600/15 blur-[150px] pointer-events-none animate-pulse duration-5000" />
+        <div className="absolute top-[20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[150px] pointer-events-none animate-pulse duration-[6000ms]" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] rounded-full bg-fuchsia-600/10 blur-[130px] pointer-events-none animate-pulse duration-[7000ms]" />
 
         <header className="relative z-10 flex items-center justify-between max-w-6xl mx-auto w-full px-6 py-6">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center font-bold text-white shadow-lg shadow-violet-500/20">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-white shadow-lg shadow-violet-500/20 transform rotate-3 hover:rotate-12 transition-transform duration-300">
               T
             </div>
-            <span className="font-extrabold tracking-tight text-white text-base">
+            <span className="font-extrabold tracking-tight text-white text-lg">
               Twinkly
             </span>
           </div>
           <Link href="/login">
             <Button
               size="sm"
-              className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 rounded-xl px-4 text-xs font-semibold"
+              className="bg-zinc-900/60 backdrop-blur-md border border-zinc-800 hover:bg-zinc-850 text-zinc-200 rounded-xl px-4 py-2 text-xs font-semibold hover:border-zinc-700 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
             >
               Se connecter
             </Button>
           </Link>
         </header>
 
-        <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-6 flex flex-col justify-center items-center py-12">
-          <div className="text-center space-y-6 max-w-3xl mx-auto animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-950/30 border border-violet-800/30 text-violet-400 text-xs font-semibold mb-2">
-              <Sparkles className="h-3.5 w-3.5" /> Une expérience utilisateur
-              premium
+        <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-6 flex flex-col justify-center items-center py-16">
+          <div className="text-center space-y-8 max-w-4xl mx-auto animate-fade-in flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-zinc-300 text-xs font-medium shadow-[0_0_15px_rgba(139,92,246,0.05)] hover:border-zinc-700 transition-all duration-300">
+              <span className="flex h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+              <span className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
+                Bienvenue sur le futur de la connexion
+              </span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent select-none">
-              Connectez-vous à la communauté
+            
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight bg-gradient-to-b from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent pb-2 select-none">
+              Connectez-vous à la <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">communauté</span>
             </h1>
+            
             <p className="text-sm md:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-              Créez un profil, partagez du texte, des images et des vidéos, et
-              suivez les publications de la communauté en temps réel.
+              Exprimez-vous librement, partagez vos aventures quotidiennes et gardez le contact avec ceux qui comptent le plus pour vous, en temps réel.
             </p>
+            
             <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
               <Link href="/signup">
                 <Button
                   size="lg"
-                  className="h-12 px-6 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-xl shadow-violet-500/20 transition-all duration-300 hover:scale-[1.02]"
+                  className="h-13 px-8 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 hover:from-violet-500 hover:via-fuchsia-500 hover:to-cyan-500 text-white font-bold rounded-2xl shadow-[0_0_35px_-5px_rgba(139,92,246,0.4)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer flex items-center gap-2"
                 >
-                  Commencer maintenant <ArrowRight className="h-4 w-4 ml-2" />
+                  Commencer l'aventure <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-20 max-w-5xl w-full text-left">
               {[
                 {
-                  icon: "📝",
-                  title: "Publications riches",
-                  desc: "Partagez du texte, des images et des vidéos avec la communauté dans un fil chronologique.",
+                  icon: "✨",
+                  title: "Publications & Réactions",
+                  desc: "Partagez vos moments forts, publiez des photos ou vidéos, et réagissez avec des emojis animés sur les publications.",
                 },
                 {
-                  icon: "🛡️",
-                  title: "Sécurité JWT",
-                  desc: "Sessions chiffrées en cookies HttpOnly pour une protection maximale contre les failles XSS.",
+                  icon: "🎬",
+                  title: "Stories Immersives",
+                  desc: "Racontez votre journée en photos ou vidéos éphémères visibles 24h et restez proche de vos amis au quotidien.",
                 },
                 {
-                  icon: "🎨",
-                  title: "Profils personnalisés",
-                  desc: "Avatar, biographie et informations entièrement personnalisables pour chaque membre.",
+                  icon: "💬",
+                  title: "Messagerie Instantanée",
+                  desc: "Discutez en temps réel avec vos proches via une messagerie de chat fluide, moderne et totalement sécurisée.",
                 },
               ].map((feat) => (
                 <div
                   key={feat.title}
-                  className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-md space-y-3"
+                  className="group relative p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md space-y-4 hover:bg-zinc-900/50 hover:border-zinc-700/80 transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(139,92,246,0.06)]"
                 >
-                  <div className="h-10 w-10 rounded-xl bg-violet-600/10 flex items-center justify-center text-lg border border-violet-500/20">
+                  <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-gradient-to-br from-violet-600/5 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <div className="h-12 w-12 rounded-2xl bg-zinc-950 border border-zinc-850 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-300">
                     {feat.icon}
                   </div>
-                  <h3 className="font-bold text-zinc-200">{feat.title}</h3>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <h3 className="font-bold text-zinc-100 text-lg group-hover:text-white transition-colors">
+                    {feat.title}
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed font-normal">
                     {feat.desc}
                   </p>
                 </div>
@@ -908,7 +924,7 @@ export default function HomeClient({
   const rightSidebarContent = (
     <>
       {/* Live Stream Widget */}
-      <div className="rounded-[28px] border border-slate-200/60 bg-white overflow-hidden shadow-xs flex flex-col h-[560px] flex-shrink-0">
+      <div className="rounded-[28px] border border-green-100/50 bg-white/80 backdrop-blur-md overflow-hidden shadow-sm hover:shadow-md hover:border-green-100/60 transition-all duration-300 flex flex-col h-[560px] flex-shrink-0">
         <div className="relative h-44 flex-shrink-0 bg-slate-900 overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop"
@@ -1037,7 +1053,7 @@ export default function HomeClient({
             {currentUser && (
               <div
                 onClick={() => setIsAddStoryOpen(true)}
-                className="group relative flex flex-col w-[112px] h-[192px] sm:w-[128px] sm:h-[208px] rounded-2xl overflow-hidden border border-slate-200/60 bg-white cursor-pointer hover:shadow-md transition-all duration-300 flex-shrink-0"
+                className="group relative flex flex-col w-[112px] h-[192px] sm:w-[128px] sm:h-[208px] rounded-2xl overflow-hidden border border-green-100/50 bg-white/80 backdrop-blur-md cursor-pointer hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 flex-shrink-0"
               >
                 {/* Top 70% (Avatar Image or Default banner) */}
                 <div className="relative flex-[7] overflow-hidden bg-slate-100">
@@ -1149,9 +1165,55 @@ export default function HomeClient({
         {/* ─── HOME VIEW (FEED & CREATE POST) ─── */}
         {activeTab === "home" && (
           <div className="space-y-6 animate-in fade-in duration-200">
+
+            {/* ── Reels Discovery Banner ── */}
+            {!isFavoritesFilter && (
+              <Link href="/reels">
+                <div className="relative rounded-[22px] overflow-hidden h-[88px] bg-gradient-to-r from-[#0f0c29] via-[#302b63] to-[#24243e] border border-white/10 shadow-sm group cursor-pointer hover:shadow-lg transition-all duration-300">
+                  {/* Glow orbs */}
+                  <div className="absolute top-[-30px] left-[20%] w-32 h-32 rounded-full bg-violet-600/30 blur-[40px] pointer-events-none" />
+                  <div className="absolute bottom-[-20px] right-[15%] w-24 h-24 rounded-full bg-pink-500/25 blur-[30px] pointer-events-none" />
+
+                  {/* Floating mini video thumbnails */}
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-80">
+                    {['from-violet-600 to-fuchsia-500', 'from-cyan-500 to-blue-600', 'from-rose-500 to-orange-500'].map((g, i) => (
+                      <div
+                        key={i}
+                        style={{ transform: `rotate(${[-6, 0, 6][i]}deg) translateY(${[4, 0, -4][i]}px)` }}
+                        className={`h-12 w-8 rounded-lg bg-gradient-to-b ${g} flex items-center justify-center shadow-md border border-white/20 flex-shrink-0`}
+                      >
+                        <Play className="h-3 w-3 fill-white text-white" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Text content */}
+                  <div className="absolute inset-0 flex items-center px-5 gap-3">
+                    <div className="h-10 w-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <Clapperboard className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="text-white font-black text-sm tracking-tight">Reels</p>
+                        <span className="flex items-center gap-0.5 text-[9px] font-bold text-orange-400 bg-orange-400/15 border border-orange-400/20 px-1.5 py-0.5 rounded-full">
+                          <Flame className="h-2.5 w-2.5" /> Trending
+                        </span>
+                      </div>
+                      <p className="text-white/60 text-[10px] font-medium">Découvrez les vidéos de la communauté</p>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="absolute right-[108px] top-1/2 -translate-y-1/2">
+                    <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-white/80 group-hover:translate-x-0.5 transition-all duration-200" />
+                  </div>
+                </div>
+              </Link>
+            )}
+
             {/* Create Post Form */}
             {!isFavoritesFilter && (
-              <div className="rounded-[24px] bg-white border border-slate-200/60 p-4 space-y-4 shadow-xs">
+              <div className="rounded-[24px] bg-white/80 backdrop-blur-md border border-green-100/50 p-4 space-y-4 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-full overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0">
                     {currentUser.avatar_url ? (
@@ -1402,7 +1464,7 @@ export default function HomeClient({
             </div>
 
             {/* 1. Demandes d'ami */}
-            <div className="bg-white border border-slate-200/60 rounded-[28px] p-5 shadow-xs space-y-4">
+            <div className="bg-white/80 backdrop-blur-md border border-green-100/50 rounded-[28px] p-5 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 space-y-4">
               <div className="flex items-center justify-between pl-1">
                 <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
                   Demandes d'ami ({friendRequests.length})
@@ -1468,7 +1530,7 @@ export default function HomeClient({
             </div>
 
             {/* 2. Suggestions d'amis (Vous connaissez peut-être...) */}
-            <div className="bg-white border border-slate-200/60 rounded-[28px] p-5 shadow-xs space-y-4">
+            <div className="bg-white/80 backdrop-blur-md border border-green-100/50 rounded-[28px] p-5 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 space-y-4">
               <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest pl-1">
                 Vous connaissez peut-être...
               </h3>
@@ -1546,7 +1608,7 @@ export default function HomeClient({
             </div>
 
             {/* 3. Tous les amis & Anniversaires */}
-            <div className="bg-white border border-slate-200/60 rounded-[28px] p-5 shadow-xs space-y-4">
+            <div className="bg-white/80 backdrop-blur-md border border-green-100/50 rounded-[28px] p-5 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <h3 className="text-xs font-bold text-slate-455 uppercase tracking-widest pl-1 select-none">
                   Tous les amis ({friendsList.length})
@@ -1755,7 +1817,7 @@ export default function HomeClient({
                   return (
                     <div
                       key={post.id}
-                      className="group bg-white rounded-3xl border border-slate-200/60 overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-300 relative animate-in fade-in duration-200"
+                      className="group bg-white/80 backdrop-blur-md rounded-3xl border border-green-100/50 overflow-hidden flex flex-col h-full hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 relative animate-in fade-in duration-200"
                     >
                       {/* Image area wrapper without overflow-hidden */}
                       <div className="relative w-full">

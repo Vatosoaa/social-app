@@ -23,50 +23,26 @@ export default async function PublicProfilePage({ params }: PageProps) {
     redirect('/login');
   }
 
-  // If visiting own profile, redirect to the profile dashboard page
   if (currentUser.id === targetUserId) {
     redirect('/profile');
   }
 
-  // Fetch target user details with follow stats
-  let targetUser;
-  try {
-    const userRes = await sql`
+  const emptyReactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+
+  // Run both queries concurrently
+  let targetUser: any;
+  let posts: Post[] = [];
+
+  const [userRes, postsRes] = await Promise.allSettled([
+    sql`
       SELECT 
-        u.id, 
-        u.name, 
-        u.bio, 
-        u.avatar_url,
-        u.role,
-        u.experience_level,
-        u.favorite_artists,
-        u.favorite_genre,
-        u.software_equipment,
-        u.music_mood,
-        u.city_region,
-        u.availability,
-        u.badges,
-        u.tags,
-        u.cover_url,
-        u.social_youtube,
-        u.social_instagram,
-        u.social_tiktok,
-        u.social_facebook,
-        u.social_gmail,
-        u.birthday::text as birthday,
-        u.school,
-        u.workplace,
-        u.gender_pronouns,
-        u.relationship_status,
-        u.languages,
-        u.job_title,
-        u.skills,
-        u.phone,
-        u.hometown,
-        u.website,
-        u.social_linkedin,
-        u.hobbies,
-        u.interests,
+        u.id, u.name, u.bio, u.avatar_url, u.role, u.experience_level,
+        u.favorite_artists, u.favorite_genre, u.software_equipment, u.music_mood,
+        u.city_region, u.availability, u.badges, u.tags, u.cover_url,
+        u.social_youtube, u.social_instagram, u.social_tiktok, u.social_facebook, u.social_gmail,
+        u.birthday::text as birthday, u.school, u.workplace,
+        u.gender_pronouns, u.relationship_status, u.languages, u.job_title,
+        u.skills, u.phone, u.hometown, u.website, u.social_linkedin, u.hobbies, u.interests,
         (SELECT COUNT(*)::int FROM follows WHERE following_id = u.id) AS followers_count,
         (SELECT COUNT(*)::int FROM follows WHERE follower_id = u.id) AS following_count,
         EXISTS(SELECT 1 FROM follows WHERE follower_id = ${currentUser.id} AND following_id = u.id) AS is_following,
@@ -79,30 +55,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
         (SELECT id FROM friend_requests WHERE sender_id = u.id AND receiver_id = ${currentUser.id} LIMIT 1) AS received_request_id
       FROM users u
       WHERE u.id = ${targetUserId}
-    `;
-    if (userRes.rows.length === 0) {
-      notFound();
-    }
-    targetUser = userRes.rows[0];
-  } catch (error) {
-    console.error('Error fetching target user profile:', error);
-    notFound();
-  }
-
-  // Fetch target user's posts
-  let posts: Post[] = [];
-  try {
-    const postsRes = await sql`
+    `,
+    sql`
       SELECT
-        p.id,
-        p.user_id,
-        p.content,
-        p.media_url,
-        p.media_type,
-        p.created_at,
-        p.updated_at,
-        u.name AS author_name,
-        u.avatar_url AS author_avatar,
+        p.id, p.user_id, p.content, p.media_url, p.media_type, p.created_at, p.updated_at,
+        u.name AS author_name, u.avatar_url AS author_avatar,
         (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
         (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
         EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUser.id}) AS user_has_liked,
@@ -121,14 +78,24 @@ export default async function PublicProfilePage({ params }: PageProps) {
       WHERE p.user_id = ${targetUserId}
       ORDER BY p.created_at DESC
       LIMIT 50
-    `;
-    const emptyReactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
-    posts = postsRes.rows.map((row) => ({
+    `,
+  ]);
+
+  if (userRes.status === 'rejected' || (userRes.status === 'fulfilled' && userRes.value.rows.length === 0)) {
+    notFound();
+  }
+
+  if (userRes.status === 'fulfilled') {
+    targetUser = userRes.value.rows[0];
+  }
+
+  if (postsRes.status === 'fulfilled') {
+    posts = postsRes.value.rows.map((row) => ({
       ...row,
       reactions_by_type: row.reactions_by_type || emptyReactions,
     })) as Post[];
-  } catch (error) {
-    console.error('Error fetching public profile posts:', error);
+  } else {
+    console.error('Error fetching public profile posts:', postsRes.reason);
   }
 
   return (

@@ -2,6 +2,7 @@ import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { sql } from '@vercel/postgres';
+import { cache } from 'react';
 
 const secretKey = process.env.SESSION_SECRET || 'default-very-secure-secret-key-32-chars-long';
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -109,8 +110,9 @@ export interface DbUser {
 
 /**
  * Helper to fetch the current authenticated user from the database.
+ * Cached per-request so multiple calls within the same render don't re-query the DB.
  */
-export async function getCurrentUser(): Promise<DbUser | null> {
+export const getCurrentUser = cache(async (): Promise<DbUser | null> => {
   const cookieStore = await cookies();
   const session = cookieStore.get('session')?.value;
   const payload = await decrypt(session);
@@ -139,4 +141,4 @@ export async function getCurrentUser(): Promise<DbUser | null> {
   }
 
   return null;
-}
+});

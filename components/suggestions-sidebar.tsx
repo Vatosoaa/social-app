@@ -32,22 +32,22 @@ export default function SuggestionsSidebar({ initialSuggestions, currentUserId }
 
   if (suggestions.length === 0) {
     return (
-      <div className="my-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 text-center">
-        <Sparkles className="h-5 w-5 text-violet-400 mx-auto mb-2 animate-pulse" />
-        <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Suggestions</p>
-        <p className="text-xs text-zinc-550">Vous suivez déjà tout le monde ! ✨</p>
+      <div className="my-8 rounded-3xl bg-white/80 backdrop-blur-md border border-green-100/50 p-5 text-center shadow-sm">
+        <Sparkles className="h-5 w-5 text-[#22C55E] mx-auto mb-2 animate-pulse" />
+        <p className="text-xs font-semibold text-[#14532D]/70 uppercase tracking-wider mb-1">Suggestions</p>
+        <p className="text-xs text-[#14532D]/60">Vous suivez déjà tout le monde ! ✨</p>
       </div>
     );
   }
 
   return (
-    <div className="my-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-md p-5 space-y-4">
-      <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+    <div className="my-8 rounded-3xl bg-white/80 backdrop-blur-md border border-green-100/50 p-5 space-y-4 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300">
+      <div className="flex items-center justify-between text-xs font-semibold text-[#14532D]/70 uppercase tracking-wider">
         <span className="flex items-center gap-2">
-          <UserPlus className="h-3.5 w-3.5 text-violet-400" />
+          <UserPlus className="h-3.5 w-3.5 text-[#22C55E]" />
           Suggestions de suivi
         </span>
-        <span className="text-[10px] text-zinc-500 font-mono">{suggestions.length}</span>
+        <span className="text-[10px] text-[#16A34A] font-mono">{suggestions.length}</span>
       </div>
 
       <ul className="space-y-4">
@@ -65,21 +65,21 @@ export default function SuggestionsSidebar({ initialSuggestions, currentUserId }
               {/* User info */}
               <Link href={profilePath} className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="relative flex-shrink-0">
-                  <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-855 bg-zinc-950 group-hover/item:border-violet-500/30 transition-all duration-300">
+                  <div className="h-9 w-9 rounded-full overflow-hidden border border-green-100 bg-green-50 group-hover/item:border-[#22C55E]/40 transition-all duration-300">
                     {user.avatar_url ? (
                       <img src={user.avatar_url} alt={user.name || ''} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-zinc-900">
-                        <User className="h-4 w-4 text-zinc-600" />
+                      <div className="h-full w-full flex items-center justify-center bg-green-50">
+                        <User className="h-4 w-4 text-green-300" />
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-zinc-200 truncate group-hover/item:text-violet-400 transition-colors">
+                  <p className="text-xs font-bold text-[#14532D] truncate group-hover/item:text-[#22C55E] transition-colors">
                     {user.name || 'Utilisateur'}
                   </p>
-                  <p className="text-[10px] text-zinc-500 truncate leading-normal">
+                  <p className="text-[10px] text-[#14532D]/60 truncate leading-normal">
                     {user.bio || 'Pas de biographie.'}
                   </p>
                 </div>
@@ -92,8 +92,8 @@ export default function SuggestionsSidebar({ initialSuggestions, currentUserId }
                 size="sm"
                 className={`h-7 px-3 text-[10px] font-bold rounded-lg transition-all duration-300 flex-shrink-0 ${
                   isFollowed
-                    ? 'bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 hover:bg-emerald-950/40'
-                    : 'bg-zinc-800 hover:bg-violet-600 text-zinc-200 hover:text-white border border-zinc-700/60 hover:border-violet-550'
+                    ? 'bg-emerald-50 border border-emerald-250 text-emerald-600'
+                    : 'bg-green-50 hover:bg-[#22C55E] text-[#16A34A] hover:text-white border border-green-100/50 hover:border-transparent shadow-xs'
                 }`}
               >
                 {isFollowed ? (

@@ -444,7 +444,7 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
                 
                 {/* Left Sidebar */}
                 <div className="md:col-span-1">
-                  <Card className="border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden sticky top-6">
+                  <Card className="border-green-100/50 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 overflow-hidden sticky top-6">
                     <CardHeader className="pb-3 border-b border-slate-100/80">
                       <CardTitle className="text-xs font-black text-slate-455 uppercase tracking-widest flex items-center gap-1.5">
                         <Info className="h-4 w-4 text-slate-400" />
@@ -483,7 +483,7 @@ export default function ProfilePublic({ targetUser, currentUser, posts }: Profil
 
                 {/* Right Details Panel */}
                 <div className="md:col-span-2">
-                  <Card className="border-slate-200/80 bg-white rounded-2xl shadow-xs min-h-[350px] relative">
+                  <Card className="border-green-100/50 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 min-h-[350px] relative">
                     <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
                     
                     {/* A. PERSONAL */}

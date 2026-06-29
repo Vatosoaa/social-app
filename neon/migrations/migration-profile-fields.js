@@ -3,7 +3,13 @@ const path = require('path');
 
 // Load .env manually
 try {
-  const envPath = path.join(__dirname, '.env');
+  let envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '.env');
+  }
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '..', '.env');
+  }
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {
@@ -36,15 +42,30 @@ const { db } = require('@vercel/postgres');
 
 async function runMigration() {
   const client = await db.connect();
-  console.log('Connected to PostgreSQL for reaction_type migration...');
+  console.log('Connected to PostgreSQL to add new profile fields...');
 
   try {
-    console.log('Adding "reaction_type" column to "likes" table...');
+    console.log('Altering "users" table to add new columns...');
     await client.sql`
-      ALTER TABLE likes ADD COLUMN IF NOT EXISTS reaction_type VARCHAR(20) DEFAULT 'like';
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS role VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS experience_level VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS favorite_artists VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS favorite_genre VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS software_equipment VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS music_mood VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS city_region VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS availability VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS badges TEXT,
+      ADD COLUMN IF NOT EXISTS tags TEXT,
+      ADD COLUMN IF NOT EXISTS social_youtube TEXT,
+      ADD COLUMN IF NOT EXISTS social_instagram TEXT,
+      ADD COLUMN IF NOT EXISTS social_tiktok TEXT,
+      ADD COLUMN IF NOT EXISTS social_facebook TEXT,
+      ADD COLUMN IF NOT EXISTS social_gmail TEXT;
     `;
-    console.log('Column "reaction_type" added successfully (or already exists).');
-    console.log('Database migration completed successfully! 🎉');
+    console.log('Table "users" updated successfully.');
+    console.log('Database migration completed! 🎉');
   } catch (error) {
     console.error('Migration failed:', error);
   } finally {

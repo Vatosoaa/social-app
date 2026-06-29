@@ -3,7 +3,13 @@ const path = require('path');
 
 // Load .env manually
 try {
-  const envPath = path.join(__dirname, '.env');
+  let envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '.env');
+  }
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '..', '.env');
+  }
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {
@@ -36,30 +42,22 @@ const { db } = require('@vercel/postgres');
 
 async function runMigration() {
   const client = await db.connect();
-  console.log('Connected to PostgreSQL to add new profile fields...');
+  console.log('Connected to PostgreSQL for follows table migration...');
 
   try {
-    console.log('Altering "users" table to add new columns...');
+    console.log('Creating "follows" table...');
     await client.sql`
-      ALTER TABLE users 
-      ADD COLUMN IF NOT EXISTS role VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS experience_level VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS favorite_artists VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS favorite_genre VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS software_equipment VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS music_mood VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS city_region VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS availability VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS badges TEXT,
-      ADD COLUMN IF NOT EXISTS tags TEXT,
-      ADD COLUMN IF NOT EXISTS social_youtube TEXT,
-      ADD COLUMN IF NOT EXISTS social_instagram TEXT,
-      ADD COLUMN IF NOT EXISTS social_tiktok TEXT,
-      ADD COLUMN IF NOT EXISTS social_facebook TEXT,
-      ADD COLUMN IF NOT EXISTS social_gmail TEXT;
+      CREATE TABLE IF NOT EXISTS follows (
+        id SERIAL PRIMARY KEY,
+        follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_follower_following UNIQUE (follower_id, following_id),
+        CONSTRAINT no_self_follow CHECK (follower_id <> following_id)
+      );
     `;
-    console.log('Table "users" updated successfully.');
-    console.log('Database migration completed! 🎉');
+    console.log('Table "follows" checked/created successfully.');
+    console.log('Database migration completed successfully! 🎉');
   } catch (error) {
     console.error('Migration failed:', error);
   } finally {

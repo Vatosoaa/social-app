@@ -28,7 +28,7 @@ function ResetPasswordContent() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none animate-pulse duration-3000" />
 
       <main className="relative z-10 w-full max-w-md">
-        <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl shadow-2xl rounded-3xl transition-all duration-300 hover:border-zinc-700/80">
+        <Card className="border-zinc-800/50 bg-zinc-900/40 backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(139,92,246,0.15)] rounded-3xl transition-all duration-300 hover:border-zinc-700/50 hover:shadow-[0_0_50px_-6px_rgba(139,92,246,0.25)]">
           <CardHeader className="space-y-2 text-center pt-8">
             <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent select-none">
               Nouveau mot de passe
@@ -47,7 +47,7 @@ function ResetPasswordContent() {
 
             {!token ? (
               <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-900/30 text-rose-300 text-xs leading-relaxed">
-                Le jeton de réinitialisation est manquant. Veuillez utiliser le lien fourni dans l e-mail (ou dans la simulation locale).
+                Le jeton de réinitialisation est manquant. Veuillez utiliser le lien fourni dans l'e-mail (ou dans la simulation locale).
               </div>
             ) : (
               <form action={action} className="space-y-4">
@@ -66,7 +66,7 @@ function ResetPasswordContent() {
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="pl-10 pr-10 h-11 bg-zinc-950/50 border-zinc-800/80 rounded-xl focus-visible:ring-violet-500 text-zinc-100 placeholder:text-zinc-600"
+                      className="pl-10 pr-10 h-11 bg-zinc-950/40 border-zinc-800/80 rounded-xl focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500 text-zinc-100 placeholder:text-zinc-600/70 transition-all duration-200"
                       required
                     />
                     <button
@@ -88,7 +88,7 @@ function ResetPasswordContent() {
                 <Button
                   disabled={pending}
                   type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                 >
                   {pending ? (
                     <span className="flex items-center justify-center gap-2">
@@ -101,7 +101,7 @@ function ResetPasswordContent() {
               </form>
             )}
           </CardContent>
-          <CardFooter className="flex justify-center pb-8 border-t border-zinc-800/40 pt-6">
+          <CardFooter className="flex justify-center pb-8 border-t border-zinc-800/40 pt-6 bg-transparent">
             <Link href="/login" className="text-xs text-violet-400 font-semibold hover:text-violet-300 transition-colors">
               Retour à la connexion
             </Link>

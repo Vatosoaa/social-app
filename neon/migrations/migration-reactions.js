@@ -3,7 +3,13 @@ const path = require('path');
 
 // Load .env manually
 try {
-  const envPath = path.join(__dirname, '.env');
+  let envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '.env');
+  }
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(__dirname, '..', '..', '.env');
+  }
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {
@@ -36,21 +42,14 @@ const { db } = require('@vercel/postgres');
 
 async function runMigration() {
   const client = await db.connect();
-  console.log('Connected to PostgreSQL for follows table migration...');
+  console.log('Connected to PostgreSQL for reaction_type migration...');
 
   try {
-    console.log('Creating "follows" table...');
+    console.log('Adding "reaction_type" column to "likes" table...');
     await client.sql`
-      CREATE TABLE IF NOT EXISTS follows (
-        id SERIAL PRIMARY KEY,
-        follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT unique_follower_following UNIQUE (follower_id, following_id),
-        CONSTRAINT no_self_follow CHECK (follower_id <> following_id)
-      );
+      ALTER TABLE likes ADD COLUMN IF NOT EXISTS reaction_type VARCHAR(20) DEFAULT 'like';
     `;
-    console.log('Table "follows" checked/created successfully.');
+    console.log('Column "reaction_type" added successfully (or already exists).');
     console.log('Database migration completed successfully! 🎉');
   } catch (error) {
     console.error('Migration failed:', error);

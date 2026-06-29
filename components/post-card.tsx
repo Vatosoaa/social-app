@@ -354,7 +354,7 @@ export default function PostCard({ post, currentUser, variant = 'default' }: Pos
 
     return (
       <>
-        <article className="bg-white border border-slate-200/60 rounded-[20px] overflow-hidden p-3 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col md:flex-row gap-3 relative group w-full">
+        <article className="bg-white/80 backdrop-blur-md border border-green-100/50 rounded-[20px] overflow-hidden p-3 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/40 transition-all duration-300 flex flex-col md:flex-row gap-3 relative group w-full">
           
           {isOwner && !isOptimistic && (
             <div className="absolute top-3 right-3 z-10">
@@ -669,8 +669,8 @@ export default function PostCard({ post, currentUser, variant = 'default' }: Pos
       <article
         className={`group relative rounded-2xl overflow-hidden transition-all duration-300 max-w-xl mx-auto w-full
           ${isOptimistic
-            ? 'opacity-70 animate-pulse border border-zinc-200/40 bg-white/40'
-            : 'bg-white border border-zinc-200/80 hover:border-violet-500/25 hover:shadow-xl hover:shadow-violet-550/5 hover:-translate-y-0.5'
+            ? 'opacity-70 animate-pulse border border-green-100/30 bg-white/40'
+            : 'bg-white/80 backdrop-blur-md border border-green-100/50 hover:border-[#22C55E]/40 hover:shadow-md hover:shadow-green-100/30 hover:-translate-y-0.5'
           }`}
       >
         {/* Gradient top accent line */}
