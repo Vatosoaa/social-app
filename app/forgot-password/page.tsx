@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none animate-pulse duration-3000" />
 
       <main className="relative z-10 w-full max-w-md">
-        <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl shadow-2xl rounded-3xl transition-all duration-300 hover:border-zinc-700/80">
+        <Card className="border-zinc-800/50 bg-zinc-900/40 backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(139,92,246,0.15)] rounded-3xl transition-all duration-300 hover:border-zinc-700/50 hover:shadow-[0_0_50px_-6px_rgba(139,92,246,0.25)]">
           <CardHeader className="space-y-2 text-center pt-8">
             <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent select-none">
               Mot de passe oublié
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
                       name="email"
                       type="email"
                       placeholder="nom@exemple.com"
-                      className="pl-10 h-11 bg-zinc-950/50 border-zinc-800/80 rounded-xl focus-visible:ring-violet-500 text-zinc-100 placeholder:text-zinc-600"
+                      className="pl-10 h-11 bg-zinc-950/40 border-zinc-800/80 rounded-xl focus-visible:ring-2 focus-visible:ring-violet-500/20 focus-visible:border-violet-500 text-zinc-100 placeholder:text-zinc-600/70 transition-all duration-200"
                       required
                     />
                   </div>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                 <Button
                   disabled={pending}
                   type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                 >
                   {pending ? (
                     <span className="flex items-center justify-center gap-2">
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                   <span className="flex h-2 w-2 rounded-full bg-violet-500 animate-ping" />
                   🛠️ Simulation Locale
                 </p>
-                <p>Aucun serveur d envoi d emails n est configuré. Utilisez ce lien généré pour modifier votre mot de passe :</p>
+                <p>Aucun serveur d'envoi d'emails n'est configuré. Utilisez ce lien généré pour modifier votre mot de passe :</p>
                 <Link
                   href={`/reset-password?token=${state.devToken}`}
                   className="block p-2 bg-black/40 rounded-lg text-cyan-400 font-mono text-xxs break-all border border-zinc-800/60 hover:bg-black/60 hover:text-cyan-300 transition-all"
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex justify-center pb-8 border-t border-zinc-800/40 pt-6">
+          <CardFooter className="flex justify-center pb-8 border-t border-zinc-800/40 pt-6 bg-transparent">
             <Link href="/login" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-1">
               <ArrowLeft className="h-3 w-3" /> Retour à la connexion
             </Link>

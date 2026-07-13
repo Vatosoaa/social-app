@@ -177,7 +177,6 @@ export async function markStoryAsViewed(storyId: number): Promise<{ success: boo
       ON CONFLICT (story_id, user_id) DO NOTHING
     `;
 
-    revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error marking story as viewed:', error);

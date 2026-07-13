@@ -500,7 +500,7 @@ export default function MessagesClient({ currentUser, initialConversations, init
   };
 
   return (
-    <div className="flex h-full min-h-0 rounded-3xl bg-white border border-slate-200/60 shadow-sm overflow-hidden">
+    <div className="flex h-full min-h-0 rounded-3xl bg-white/80 backdrop-blur-md border border-green-100/50 shadow-sm hover:shadow-md hover:border-green-100/60 hover:shadow-green-100/30 transition-all duration-300 overflow-hidden">
       
       {/* ─── CONVERSATIONS LIST SIDEBAR ─── */}
       <div className={`w-full lg:w-[320px] flex-shrink-0 border-r border-slate-200/60 flex flex-col bg-slate-50/80 min-h-0 ${

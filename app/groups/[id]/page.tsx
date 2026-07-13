@@ -29,63 +29,63 @@ export default async function GroupPage({ params }: PageProps) {
   let userRole: string | null = null;
 
   try {
-    // Fetch group details
-    const groupRes = await sql`
-      SELECT 
-        g.*,
-        (SELECT COUNT(*)::int FROM group_members WHERE group_id = g.id) AS members_count,
-        u.name AS creator_name,
-        u.avatar_url AS creator_avatar
-      FROM groups g
-      JOIN users u ON g.creator_id = u.id
-      WHERE g.id = ${groupId}
-    `;
+    // Fetch group details and membership check concurrently
+    const [groupRes, memberCheckRes] = await Promise.all([
+      sql`
+        SELECT 
+          g.*,
+          (SELECT COUNT(*)::int FROM group_members WHERE group_id = g.id) AS members_count,
+          u.name AS creator_name,
+          u.avatar_url AS creator_avatar
+        FROM groups g
+        JOIN users u ON g.creator_id = u.id
+        WHERE g.id = ${groupId}
+      `,
+      sql`
+        SELECT role FROM group_members 
+        WHERE group_id = ${groupId} AND user_id = ${currentUser.id}
+      `,
+    ]);
 
     if (groupRes.rows.length === 0) {
       redirect('/');
     }
 
     group = groupRes.rows[0];
+    isMember = memberCheckRes.rows.length > 0;
+    userRole = memberCheckRes.rows[0]?.role || null;
 
-    // Check membership
-    const memberCheck = await sql`
-      SELECT role FROM group_members 
-      WHERE group_id = ${groupId} AND user_id = ${currentUser.id}
-    `;
-    isMember = memberCheck.rows.length > 0;
-    userRole = memberCheck.rows[0]?.role || null;
-
-    // Fetch members (limit 20)
-    const membersRes = await sql`
-      SELECT 
-        gm.id, gm.user_id, gm.role, gm.joined_at,
-        u.name, u.avatar_url
-      FROM group_members gm
-      JOIN users u ON gm.user_id = u.id
-      WHERE gm.group_id = ${groupId}
-      ORDER BY gm.joined_at ASC
-      LIMIT 20
-    `;
-    members = membersRes.rows;
-
-    // Fetch group posts
-    if (isMember) {
-      const postsRes = await sql`
+    // Fetch members and posts (if member) concurrently
+    const [membersRes, postsRes] = await Promise.all([
+      sql`
         SELECT 
-          gp.*, 
-          u.name AS author_name, 
-          u.avatar_url AS author_avatar
-        FROM group_posts gp
-        JOIN users u ON gp.user_id = u.id
-        WHERE gp.group_id = ${groupId}
-        ORDER BY gp.created_at DESC
-        LIMIT 50
-      `;
-      posts = postsRes.rows;
-    }
+          gm.id, gm.user_id, gm.role, gm.joined_at,
+          u.name, u.avatar_url
+        FROM group_members gm
+        JOIN users u ON gm.user_id = u.id
+        WHERE gm.group_id = ${groupId}
+        ORDER BY gm.joined_at ASC
+        LIMIT 20
+      `,
+      isMember
+        ? sql`
+            SELECT 
+              gp.*, 
+              u.name AS author_name, 
+              u.avatar_url AS author_avatar
+            FROM group_posts gp
+            JOIN users u ON gp.user_id = u.id
+            WHERE gp.group_id = ${groupId}
+            ORDER BY gp.created_at DESC
+            LIMIT 50
+          `
+        : Promise.resolve({ rows: [] }),
+    ]);
+
+    members = membersRes.rows;
+    posts = postsRes.rows;
   } catch (err: any) {
     console.error('Failed to load group:', err);
-    // Tables might not exist yet, redirect home
     redirect('/');
   }
 
