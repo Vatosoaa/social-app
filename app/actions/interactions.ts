@@ -51,7 +51,6 @@ export async function toggleLike(postId: number): Promise<{ success: boolean; li
     `;
     const count = countRes.rows[0]?.count || 0;
 
-    revalidatePath('/');
     return { success: true, liked, count };
   } catch (error) {
     console.error('Error toggling like:', error);
@@ -143,7 +142,6 @@ export async function toggleReaction(
       wow: r.wow || 0,   sad: r.sad || 0,   angry: r.angry || 0,
     };
 
-    revalidatePath('/');
     return { success: true, reactions, user_reaction };
   } catch (error) {
     console.error('Error toggling reaction:', error);
@@ -261,7 +259,6 @@ export async function toggleFavorite(postId: number): Promise<{ success: boolean
       favorited = true;
     }
 
-    revalidatePath('/');
     return { success: true, favorited };
   } catch (error) {
     console.error('Error toggling favorite:', error);

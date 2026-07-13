@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Heart, MessageCircle, Share2, Bookmark, Volume2, VolumeX,
   Play, Pause, ChevronUp, ChevronDown, ArrowLeft, Plus, Music2,
-  Send, X, Loader2,
+  Send, X, Loader2, Radio,
 } from 'lucide-react';
 import type { Post } from '@/lib/definitions';
 import type { DbUser } from '@/lib/session';
@@ -134,18 +134,50 @@ function ReelCard({
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden flex-shrink-0 snap-start snap-always">
-      {/* Video */}
-      <video
-        ref={videoRef}
-        src={reel.media_url || ''}
-        className="absolute inset-0 w-full h-full object-cover"
-        loop
-        playsInline
-        muted={isMuted}
-        preload="metadata"
-        onTimeUpdate={handleTimeUpdate}
-        onClick={togglePlay}
-      />
+      {/* Video — native or embedded (YouTube/Vimeo) */}
+      {(() => {
+        const url = reel.media_url || '';
+        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+
+        if (ytMatch) {
+          return (
+            <iframe
+              src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=${isActive ? 1 : 0}&loop=1&mute=${isMuted ? 1 : 0}&playlist=${ytMatch[1]}&controls=0&rel=0&modestbranding=1`}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          );
+        }
+
+        if (vimeoMatch) {
+          return (
+            <iframe
+              src={`https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=${isActive ? 1 : 0}&loop=1&muted=${isMuted ? 1 : 0}&background=1`}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          );
+        }
+
+        // Native video file
+        return (
+          <video
+            ref={videoRef}
+            src={url}
+            className="absolute inset-0 w-full h-full object-cover"
+            loop
+            playsInline
+            muted={isMuted}
+            preload="metadata"
+            onTimeUpdate={handleTimeUpdate}
+            onClick={togglePlay}
+          />
+        );
+      })()}
+
 
       {/* Dark gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
@@ -160,16 +192,28 @@ function ReelCard({
       )}
 
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-4 pb-2">
-        <Link href="/" className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors">
-          <ArrowLeft className="h-5 w-5" />
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-5 pt-5 pb-3">
+        {/* Back button */}
+        <Link
+          href="/"
+          className="group flex items-center gap-2 pl-2 pr-3.5 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 text-white hover:bg-white/20 transition-all duration-200 shadow-lg"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-[11px] font-bold hidden sm:block">Accueil</span>
         </Link>
-        <span className="text-white font-bold text-sm tracking-wide select-none drop-shadow">Reels</span>
+
+        {/* Title badge */}
+        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-xl border border-white/15 px-4 py-2 rounded-full shadow-xl">
+          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+          <span className="text-white font-black text-sm tracking-widest uppercase select-none">Reels</span>
+        </div>
+
+        {/* Mute button */}
         <button
           onClick={() => setIsMuted((m) => !m)}
-          className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors"
+          className="p-2.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 text-white hover:bg-white/20 transition-all duration-200 shadow-lg"
         >
-          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          {isMuted ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
         </button>
       </div>
 
@@ -480,14 +524,37 @@ export default function ReelsClient({ reels, currentUser }: ReelsClientProps) {
           ))}
         </div>
 
-        {/* Upload CTA */}
-        <Link
-          href="/"
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold rounded-full transition-all"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Publier une vidéo
-        </Link>
+        {/* Upload & Live CTA */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
+          {/* Publish video button */}
+          <Link
+            href="/"
+            className="group relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 text-white text-xs font-bold transition-all duration-200 shadow-2xl hover:scale-105 active:scale-95 overflow-hidden"
+          >
+            {/* Subtle shimmer on hover */}
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            <div className="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+              <Plus className="h-3.5 w-3.5" />
+            </div>
+            <span className="tracking-wide">Publier une vidéo</span>
+          </Link>
+
+          {/* Live button */}
+          <Link
+            href="/live"
+            className="group relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-black tracking-wide transition-all duration-200 shadow-2xl shadow-rose-600/40 hover:shadow-rose-500/60 hover:scale-105 active:scale-95 overflow-hidden border border-rose-400/30"
+          >
+            {/* Glow sweep on hover */}
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            {/* Pulsing dot */}
+            <span className="relative flex h-3 w-3 flex-shrink-0">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-white/60 animate-ping opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+            </span>
+            <Radio className="h-3.5 w-3.5" />
+            <span>Démarrer un Live</span>
+          </Link>
+        </div>
       </div>
     </>
   );

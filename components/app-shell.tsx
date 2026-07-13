@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Home as HomeIcon, Users, MessageSquare, Bookmark, User,
-  LogOut, Bell, Clapperboard
+  LogOut, Bell, Clapperboard, Radio
 } from 'lucide-react';
 import { logout } from '@/app/actions/auth';
 import { getFriends } from '@/app/actions/friends';
@@ -37,6 +37,8 @@ interface AppShellProps {
   children: React.ReactNode;
   /** Optional right sidebar content */
   rightSidebar?: React.ReactNode;
+  /** Pre-fetched friends list from server — skips the client-side fetch if provided */
+  initialFriendsList?: any[];
 }
 
 const GROUPS = [
@@ -44,15 +46,17 @@ const GROUPS = [
   { id: 2, name: 'Sketch Community', icon: <SketchIcon /> },
 ];
 
-export default function AppShell({ currentUser, children, rightSidebar }: AppShellProps) {
+export default function AppShell({ currentUser, children, rightSidebar, initialFriendsList }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { showAlert } = useAlert();
   const [isPending, startTransition] = useTransition();
 
-  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [friendsList, setFriendsList] = useState<any[]>(initialFriendsList ?? []);
 
   useEffect(() => {
+    // Only fetch if no initial list was passed from the server
+    if (initialFriendsList !== undefined) return;
     async function loadFriends() {
       if (currentUser) {
         try {
@@ -64,7 +68,7 @@ export default function AppShell({ currentUser, children, rightSidebar }: AppShe
       }
     }
     loadFriends();
-  }, [currentUser]);
+  }, [currentUser, initialFriendsList]);
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -75,11 +79,12 @@ export default function AppShell({ currentUser, children, rightSidebar }: AppShe
 
   const NAV_TABS = [
     { id: 'home', icon: HomeIcon, href: '/' },
-    { id: 'network', icon: Users, href: '/?tab=network' },
     { id: 'reels', icon: Clapperboard, href: '/reels' },
+    { id: 'live', icon: Radio, href: '/live' },
     { id: 'messages', icon: MessageSquare, href: '/messages' },
-    { id: 'favorites', icon: Bookmark, href: '/?filter=favorites' },
     { id: 'profile', icon: User, href: '/profile' },
+    { id: 'network', icon: Users, href: '/?tab=network' },
+    { id: 'favorites', icon: Bookmark, href: '/?filter=favorites' },
   ];
 
   const searchParams = useSearchParams();
@@ -91,6 +96,7 @@ export default function AppShell({ currentUser, children, rightSidebar }: AppShe
     if (id === 'messages') return pathname === '/messages';
     if (id === 'profile') return pathname.startsWith('/profile');
     if (id === 'reels') return pathname === '/reels';
+    if (id === 'live') return pathname === '/live';
     if (id === 'home') return pathname === '/' && !tabParam && !filterParam;
     if (id === 'network') return pathname === '/' && tabParam === 'network';
     if (id === 'favorites') return pathname === '/' && filterParam === 'favorites';

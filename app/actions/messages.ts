@@ -72,10 +72,8 @@ export async function getConversations(): Promise<Conversation[]> {
   if (!currentUser) return [];
 
   try {
-    // Update current user's presence heartbeat
-    await sql`
-      UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = ${currentUser.id}
-    `;
+    // Fire-and-forget — don't block the conversations query
+    sql`UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = ${currentUser.id}`.catch(() => {});
 
     const res = await sql`
       SELECT 

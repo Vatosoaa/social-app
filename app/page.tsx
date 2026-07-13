@@ -19,22 +19,36 @@ async function fetchPosts(currentUserId: number, filter: string): Promise<Post[]
       SELECT
         p.id, p.user_id, p.content, p.media_url, p.media_type, p.created_at, p.updated_at,
         u.name AS author_name, u.avatar_url AS author_avatar, u.role AS author_role,
-        (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
-        (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
-        EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_liked,
-        EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_favorited,
-        (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUserId} LIMIT 1) AS user_reaction,
-        (SELECT json_build_object(
-          'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
-          'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
-          'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
-          'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
-          'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
-          'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
-        ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+        COALESCE(lc.cnt, 0)::int AS likes_count,
+        COALESCE(cc.cnt, 0)::int AS comments_count,
+        (ul.reaction_type IS NOT NULL) AS user_has_liked,
+        (uf.post_id IS NOT NULL) AS user_has_favorited,
+        ul.reaction_type AS user_reaction,
+        json_build_object(
+          'like',  COALESCE(lr.like_cnt,  0),
+          'love',  COALESCE(lr.love_cnt,  0),
+          'haha',  COALESCE(lr.haha_cnt,  0),
+          'wow',   COALESCE(lr.wow_cnt,   0),
+          'sad',   COALESCE(lr.sad_cnt,   0),
+          'angry', COALESCE(lr.angry_cnt, 0)
+        ) AS reactions_by_type
       FROM posts p
       JOIN users u ON p.user_id = u.id
       JOIN favorites f ON p.id = f.post_id AND f.user_id = ${currentUserId}
+      LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM likes GROUP BY post_id) lc ON lc.post_id = p.id
+      LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM comments GROUP BY post_id) cc ON cc.post_id = p.id
+      LEFT JOIN likes ul ON ul.post_id = p.id AND ul.user_id = ${currentUserId}
+      LEFT JOIN favorites uf ON uf.post_id = p.id AND uf.user_id = ${currentUserId}
+      LEFT JOIN (
+        SELECT post_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like')::int  AS like_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'love')::int  AS love_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'haha')::int  AS haha_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'wow')::int   AS wow_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'sad')::int   AS sad_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'angry')::int AS angry_cnt
+        FROM likes GROUP BY post_id
+      ) lr ON lr.post_id = p.id
       ORDER BY p.created_at DESC
       LIMIT 50
     `;
@@ -46,21 +60,35 @@ async function fetchPosts(currentUserId: number, filter: string): Promise<Post[]
       SELECT
         p.id, p.user_id, p.content, p.media_url, p.media_type, p.created_at, p.updated_at,
         u.name AS author_name, u.avatar_url AS author_avatar, u.role AS author_role,
-        (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
-        (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
-        EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_liked,
-        EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_favorited,
-        (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUserId} LIMIT 1) AS user_reaction,
-        (SELECT json_build_object(
-          'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
-          'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
-          'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
-          'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
-          'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
-          'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
-        ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+        COALESCE(lc.cnt, 0)::int AS likes_count,
+        COALESCE(cc.cnt, 0)::int AS comments_count,
+        (ul.reaction_type IS NOT NULL) AS user_has_liked,
+        (uf.post_id IS NOT NULL) AS user_has_favorited,
+        ul.reaction_type AS user_reaction,
+        json_build_object(
+          'like',  COALESCE(lr.like_cnt,  0),
+          'love',  COALESCE(lr.love_cnt,  0),
+          'haha',  COALESCE(lr.haha_cnt,  0),
+          'wow',   COALESCE(lr.wow_cnt,   0),
+          'sad',   COALESCE(lr.sad_cnt,   0),
+          'angry', COALESCE(lr.angry_cnt, 0)
+        ) AS reactions_by_type
       FROM posts p
       JOIN users u ON p.user_id = u.id
+      LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM likes GROUP BY post_id) lc ON lc.post_id = p.id
+      LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM comments GROUP BY post_id) cc ON cc.post_id = p.id
+      LEFT JOIN likes ul ON ul.post_id = p.id AND ul.user_id = ${currentUserId}
+      LEFT JOIN favorites uf ON uf.post_id = p.id AND uf.user_id = ${currentUserId}
+      LEFT JOIN (
+        SELECT post_id,
+          COUNT(*) FILTER (WHERE reaction_type = 'like')::int  AS like_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'love')::int  AS love_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'haha')::int  AS haha_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'wow')::int   AS wow_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'sad')::int   AS sad_cnt,
+          COUNT(*) FILTER (WHERE reaction_type = 'angry')::int AS angry_cnt
+        FROM likes GROUP BY post_id
+      ) lr ON lr.post_id = p.id
       WHERE p.media_url IS NOT NULL AND p.media_url <> ''
       ORDER BY p.created_at DESC
       LIMIT 50
@@ -72,21 +100,35 @@ async function fetchPosts(currentUserId: number, filter: string): Promise<Post[]
     SELECT
       p.id, p.user_id, p.content, p.media_url, p.media_type, p.created_at, p.updated_at,
       u.name AS author_name, u.avatar_url AS author_avatar, u.role AS author_role,
-      (SELECT COUNT(*)::int FROM likes WHERE post_id = p.id) AS likes_count,
-      (SELECT COUNT(*)::int FROM comments WHERE post_id = p.id) AS comments_count,
-      EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_liked,
-      EXISTS(SELECT 1 FROM favorites WHERE post_id = p.id AND user_id = ${currentUserId}) AS user_has_favorited,
-      (SELECT reaction_type FROM likes WHERE post_id = p.id AND user_id = ${currentUserId} LIMIT 1) AS user_reaction,
-      (SELECT json_build_object(
-        'like',  COUNT(*) FILTER (WHERE reaction_type = 'like'),
-        'love',  COUNT(*) FILTER (WHERE reaction_type = 'love'),
-        'haha',  COUNT(*) FILTER (WHERE reaction_type = 'haha'),
-        'wow',   COUNT(*) FILTER (WHERE reaction_type = 'wow'),
-        'sad',   COUNT(*) FILTER (WHERE reaction_type = 'sad'),
-        'angry', COUNT(*) FILTER (WHERE reaction_type = 'angry')
-      ) FROM likes WHERE post_id = p.id) AS reactions_by_type
+      COALESCE(lc.cnt, 0)::int AS likes_count,
+      COALESCE(cc.cnt, 0)::int AS comments_count,
+      (ul.reaction_type IS NOT NULL) AS user_has_liked,
+      (uf.post_id IS NOT NULL) AS user_has_favorited,
+      ul.reaction_type AS user_reaction,
+      json_build_object(
+        'like',  COALESCE(lr.like_cnt,  0),
+        'love',  COALESCE(lr.love_cnt,  0),
+        'haha',  COALESCE(lr.haha_cnt,  0),
+        'wow',   COALESCE(lr.wow_cnt,   0),
+        'sad',   COALESCE(lr.sad_cnt,   0),
+        'angry', COALESCE(lr.angry_cnt, 0)
+      ) AS reactions_by_type
     FROM posts p
     JOIN users u ON p.user_id = u.id
+    LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM likes GROUP BY post_id) lc ON lc.post_id = p.id
+    LEFT JOIN (SELECT post_id, COUNT(*)::int AS cnt FROM comments GROUP BY post_id) cc ON cc.post_id = p.id
+    LEFT JOIN likes ul ON ul.post_id = p.id AND ul.user_id = ${currentUserId}
+    LEFT JOIN favorites uf ON uf.post_id = p.id AND uf.user_id = ${currentUserId}
+    LEFT JOIN (
+      SELECT post_id,
+        COUNT(*) FILTER (WHERE reaction_type = 'like')::int  AS like_cnt,
+        COUNT(*) FILTER (WHERE reaction_type = 'love')::int  AS love_cnt,
+        COUNT(*) FILTER (WHERE reaction_type = 'haha')::int  AS haha_cnt,
+        COUNT(*) FILTER (WHERE reaction_type = 'wow')::int   AS wow_cnt,
+        COUNT(*) FILTER (WHERE reaction_type = 'sad')::int   AS sad_cnt,
+        COUNT(*) FILTER (WHERE reaction_type = 'angry')::int AS angry_cnt
+      FROM likes GROUP BY post_id
+    ) lr ON lr.post_id = p.id
     ORDER BY p.created_at DESC
     LIMIT 50
   `;

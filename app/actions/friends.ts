@@ -287,7 +287,6 @@ export async function sendFriendRequest(targetUserId: number): Promise<{ success
       VALUES (${targetUserId}, ${currentUser.id}, 'friend_request')
     `;
 
-    revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error sending friend request:', error);
@@ -385,7 +384,6 @@ export async function declineFriendRequest(requestId: number): Promise<{ success
       WHERE recipient_id = ${currentUser.id} AND notifier_id = ${request.sender_id} AND type = 'friend_request'
     `;
 
-    revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error declining friend request:', error);
@@ -413,7 +411,6 @@ export async function cancelFriendRequest(targetUserId: number): Promise<{ succe
       WHERE recipient_id = ${targetUserId} AND notifier_id = ${currentUser.id} AND type = 'friend_request'
     `;
 
-    revalidatePath('/');
     return { success: true };
   } catch (error) {
     console.error('Error cancelling friend request:', error);

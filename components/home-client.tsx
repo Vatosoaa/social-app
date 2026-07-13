@@ -47,7 +47,7 @@ import {
 import type { Post, UserStoryGroup } from "@/lib/definitions";
 import StoryViewer from "@/components/story-viewer";
 import AddStoryDialog from "@/components/add-story-dialog";
-import { Plus } from "lucide-react";
+import { Plus, Radio } from "lucide-react";
 import type { DbUser } from "@/lib/session";
 import type { FollowUser } from "@/app/actions/follows";
 import {
@@ -1016,7 +1016,7 @@ export default function HomeClient({
 
   return (
     <>
-      <AppShell currentUser={currentUser!} rightSidebar={rightSidebarContent}>
+      <AppShell currentUser={currentUser!} rightSidebar={rightSidebarContent} initialFriendsList={friendsList}>
         {/* Dynamic Stories Banner */}
         <div className="relative group/stories w-full select-none">
           {/* Left Scroll Button */}
@@ -1404,6 +1404,14 @@ export default function HomeClient({
                       >
                         <Video className="h-3.5 w-3.5" /> Vidéo
                       </button>
+                      <Link href="/live">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all"
+                        >
+                          <Radio className="h-3.5 w-3.5 text-rose-500 animate-pulse" /> En direct
+                        </button>
+                      </Link>
                     </div>
 
                     <Button
